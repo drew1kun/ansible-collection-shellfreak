@@ -1,0 +1,54 @@
+---
+- name: "[main] Include variables for {{ vim_plugin_manager }} plugin manager"
+  ansible.builtin.include_vars: "{{ vim_plugin_manager }}.yml"
+  tags: vim
+
+- name: "[main] Import cleanup tasks"
+  ansible.builtin.import_tasks: cleanup.yml
+  when: vim_cleanup
+  tags:
+    - vim
+    - vim_cleanup
+
+- name: "[main] Import dependencies installation tasks"
+  ansible.builtin.import_tasks: dependencies.yml
+  tags:
+    - vim
+    - vim_dependencies
+
+- name: "[main] Include Darwin-specific tasks if provisioning MacOS"
+  ansible.builtin.include_tasks: darwin.yml
+  when: "'Darwin' in ansible_system"
+  tags: vim
+
+- name: "[main] Include vim installation tasks"
+  ansible.builtin.include_tasks: linux.yml
+  when: "not 'Darwin' in ansible_system"
+  tags: vim
+
+- name: "[main] Include vars for {{ vim_env }}-wide installation"
+  ansible.builtin.include_vars: "{{ vim_env }}.yml"
+  tags: vim
+
+- name: "[main] Include system configuration tasks"
+  ansible.builtin.include_tasks: system.yml
+  when:
+    - "'system' in vim_env"
+    - "not 'Darwin' in ansible_system"
+  tags: vim
+
+- name: "[main] Include user configuration tasks"
+  ansible.builtin.include_tasks: users.yml
+  when: "'user' in vim_env or 'Darwin' in ansible_system"
+  tags: vim
+
+- name: "[main] Include vim-airline configuration if installing airline"
+  ansible.builtin.include_tasks: airline.yml
+  loop: "{{ vim_plugins|flatten(levels=1) }}"
+  when: item.name == 'vim-airline/vim-airline'
+  tags: vim
+
+- name: "[main] Include neovim installation tasks"
+  ansible.builtin.include_tasks: nvim.yml
+  when: vim_neovim
+  tags: vim

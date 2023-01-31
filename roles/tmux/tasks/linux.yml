@@ -1,0 +1,9 @@
+---
+- name: '[linux] Install tmux for Linux'
+  ansible.builtin.package:
+    name: tmux
+    state: present
+  become: true
+  register: tmux_install
+  until: tmux_install is succeeded
+  tags: tmux

@@ -1,0 +1,20 @@
+---
+# handlers file for mpd
+
+# Linux services:
+- name: Restart mpd service
+  ansible.builtin.service:
+    name: mpd
+    state: restarted
+    enabled: true
+  when: mpd_autostart
+  become: true
+
+
+### MACOS
+# Brew services:
+- name: Restart mpd service with brew services command
+  ansible.builtin.command: >
+    {{ mpd_brew_prefix.stdout }}/bin/brew services restart mpd
+  when: mpd_autostart
+  become: false

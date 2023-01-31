@@ -1,0 +1,45 @@
+---
+- name: '[dependencies:darwin] Install powerlevel9k dependencies: bc'
+  community.general.homebrew: name=bc state=present
+  become: false  # always the case with homebrew
+  register: ohmyzsh_dep_result
+  until: ohmyzsh_dep_result is succeeded
+  when: ohmyzsh_powerlevel9k
+  tags:
+    - ohmyzsh
+    - ohmyzsh_dependencies
+
+- name: '[dependencies:darwin] Get correct brew prefix'
+  ansible.builtin.command: 'brew --prefix'
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  register: ohmyzsh_brew_prefix
+  changed_when: false
+  tags:
+    - ohmyzsh
+    - ohmyzsh_dependencies
+
+- name: '[dependencies:darwin] Install fzf'
+  community.general.homebrew: name=fzf state=present
+  become: false  # always the case with homebrew
+  register: ohmyzsh_dep_result
+  until: ohmyzsh_dep_result is succeeded
+  tags:
+    - ohmyzsh
+    - ohmyzsh_dependencies
+
+- name: '[dependencies:darwin] Install fzf useful key bindings and fuzzy completion'
+  ansible.builtin.command: "{{ ohmyzsh_brew_prefix.stdout }}/opt/fzf/install --key-bindings --completion --update-rc"
+  changed_when: false
+  tags:
+    - ohmyzsh
+    - ohmyzsh_dependencies
+
+- name: '[dependencies:darwin] Install zsh on MacOS'
+  community.general.homebrew: name=zsh state=present
+  become: false
+  register: ohmyzsh_dep_result
+  until: ohmyzsh_dep_result is succeeded
+  tags:
+    - ohmyzsh
+    - ohmyzsh_dependencies

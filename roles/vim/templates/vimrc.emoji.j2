@@ -1,0 +1,59 @@
+"==================================== EMOJI ====================================
+" Git Integration
+{% if vim_emoji_git_integration %}
+silent! if emoji#available()
+    " Git Signify
+    let g:signify_sign_add = emoji#for('small_blue_diamond')
+    let g:signify_sign_delete = emoji#for('small_red_triangle')
+    let g:signify_sign_delete_first_line = '‾'
+    let g:signify_sign_change = emoji#for('small_orange_diamond')
+    let g:signify_sign_changedelete = emoji#for('collision')
+
+    " Git Gutter
+    let g:gitgutter_sign_added = emoji#for('small_blue_diamond')
+    let g:gitgutter_sign_modified = emoji#for('small_orange_diamond')
+    let g:gitgutter_sign_removed = emoji#for('small_red_triangle')
+    let g:gitgutter_sign_modified_removed = emoji#for('collision')
+endif
+{% else %}
+"silent! if emoji#available()
+"    " Git Signify
+"    let g:signify_sign_add = emoji#for('small_blue_diamond')
+"    let g:signify_sign_delete = emoji#for('small_red_triangle')
+"    let g:signify_sign_delete_first_line = '‾'
+"    let g:signify_sign_change = emoji#for('small_orange_diamond')
+"    let g:signify_sign_changedelete = emoji#for('collision')
+"
+"    " Git Gutter
+"    let g:gitgutter_sign_added = emoji#for('small_blue_diamond')
+"    let g:gitgutter_sign_modified = emoji#for('small_orange_diamond')
+"    let g:gitgutter_sign_removed = emoji#for('small_red_triangle')
+"    let g:gitgutter_sign_modified_removed = emoji#for('collision')
+"endif
+{% endif %}
+
+"" Append Emoji list to current buffer
+"for e in emoji#list()
+"  call append(line('$'), printf('%s (%s)', emoji#for(e), e))
+"endfor
+
+"" Create emoji database for weechat:
+"for e in emoji#list()
+"  call append(line('$'), printf(':%s:', e))
+"  call append(line('$'), printf('%s', emoji#for(e)))
+"endfor
+
+" Completion
+" This is needed when you do not have any other autocompletion sources for emoji
+{% if vim_plugins | selectattr('name','search','asyncomplete-emoji') | list | count > 0 %}
+"set completefunc=emoji#complete
+{% else %}
+set completefunc=emoji#complete
+{% endif %}
+
+" Replace :emoji_name: into Emojis
+function! EmojiSubstitute()
+    %s/:\([^:]\+\):/\=emoji#for(submatch(1), submatch(0))/g
+endfunction
+:command! Emoji :call EmojiSubstitute()
+"===============================================================================

@@ -1,0 +1,44 @@
+---
+# defaults file for expandfs
+
+# remove all vim configuration customizations created by this role
+vim_cleanup: false
+
+# where to install vim config: 'system' | 'user'
+vim_env: user
+
+# system-wide vundle plugin installation can only be stored in /root/.vim, so
+# user-specific configuration is possible, but
+# only if system-wide configuration is NOT planned to be used on this system
+# For non-root users it is possible to use both system-wide and user configurations
+vim_users:
+  - "{{ ansible_user_id }}"
+
+vim_neovim: true
+
+# mustang, solarized, nord, cipherpunk...
+vim_colorscheme: solarized
+
+vim_plugin_manager: plug  # 'vundle' or 'plug'
+
+vim_vundle_version: 'v0.10.2'
+
+# Tip: note that the plugins specified within the single and double quotes.
+# This makes possible to specify the load options for each plugin if using plug (recommended)
+
+# Another Tip: installing EMOJI plugin both systemwide AND per user is bad idea.
+# If doing both system-wide and user configuration,
+# then disable Emoji for one of installation variants depending on the goals.
+
+# the name value must be the last part of the plugin name after / delimiter:
+# e.g. for 'mileszs/ack.vim' plugin name: ack.vim
+vim_plugins:
+  - {name: 'tpope/vim-sensible'}              # Starting point for vim configuration
+  - {name: 'vim-airline/vim-airline'}         # Lightweight vimscrip-based statusline
+  - {name: 'vim-airline/vim-airline-themes'}  # vim-airline theme collection
+  - {name: 'edkolev/tmuxline.vim'}            # tmux status line generator with vim-airline integration
+  - {name: 'junegunn/vim-emoji'}              # EMOJI
+  - {name: 'junegunn/fzf', opts: "'dir': '~/.fzf', 'do': './install --all', 'on': ['Files']"}
+  - {name: 'junegunn/fzf.vim', opts: "'on': ['Files']"}
+
+vim_emoji_git_integration: false  # Itegrate emoji with gitgutter or signify (some people don't like the look)

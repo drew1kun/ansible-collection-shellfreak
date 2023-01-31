@@ -1,0 +1,35 @@
+"==================================== CTRLP ====================================
+" SPEEDUP_CTRLP:
+"===================================== Git =====================================
+" Make ctrlp ignore what's in .gitignore:
+let g:ctrlp_user_command = ['.git/', 'git --git-dir=%s/.git ls-files -oc --exclude-standard']
+
+" Ignore some folders and files for CtrlP indexing
+let g:ctrlp_custom_ignore = {
+  \ 'dir':  '\.git$\|\.yardoc\|public$|log\|tmp$',
+  \ 'file': '\.so$\|\.dat$|\.DS_Store$|\.swp'
+  \ }
+"===============================================================================
+
+"====================================== AG =====================================
+"" brew install ag
+"" If 'ag' package is installed use it instead of 'find'
+"" NOTE: ag ignores the .sql files so not sure if you want to use it
+"" Use The Silver Searcher https://github.com/ggreer/the_silver_searcher
+"if executable('ag')
+"  " Use Ag over Grep
+"  set grepprg=ag\ --nogroup\ --nocolor
+"
+"  " Use ag in CtrlP for listing files. Lightning fast and respects .gitignore
+"  let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
+"endif
+"===============================================================================
+
+"====================================== FD =====================================
+"" brew install fd
+"" If 'fd' is installed than you can use it:
+"let g:ctrlp_user_command = 'fd --type f --color=never "" %s'
+
+"" Don't forget to disable cache:
+"let g:ctrlp_use_caching = 0
+"===============================================================================

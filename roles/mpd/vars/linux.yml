@@ -1,0 +1,14 @@
+---
+# ============ INSTALL RELATED =============
+mpd_firewall_zones: ['public']
+
+# ============ CONFIG RELATED ==============
+# music directory can also be nfs share if mpd built --with-libnfs
+#   mpd_music_dir: nfs://192.168.1.1/music
+mpd_music_dir: /var/lib/mpd/music
+mpd_playlist_dir: /var/lib/mpd/playlists
+mpd_db_file: /var/lib/mpd/mpd.db
+mpd_sticker_file: /var/lib/mpd/sticker.db
+mpd_log_file: syslog
+mpd_state_file: /var/lib/mpd/mpdstate
+mpd_user: mpd

@@ -1,0 +1,85 @@
+"===================================== ALE =====================================
+" https://github.com/w0rp/ale
+
+" COMPLETIONS
+
+" 1 - Enable completions (must be set before ALE is loaded); 0 - Disable completions.
+let g:ale_completion_enabled = 1
+
+
+" LINTERS
+" By default all available tools for all supported languages will be run
+" To only select a subset of the tools, you can define b:ale_linters for a single buffer, or g:ale_linters globally.
+
+" Example: Use only specified linters for specified filetype (before ALE has been loaded):
+" let g:ale_linters = {
+" \   'javascript': ['eslint'],
+" \}
+
+" 1 - Only run linters named in ale_linters settings; 0 - run all possible linters.
+" let g:ale_linters_explicit = 1
+
+" Run linters only after I save the file, not continuously.
+" let g:ale_lint_on_text_changed = 'never'
+
+" 1 - Run the linters right after opening a file, 0 - Do not run linters on file opening.
+" let g:ale_lint_on_enter = 0
+
+
+" FIXERS
+" ALE can fix files with the ALEFix command.
+" Functions need to be configured either in each buffer with a b:ale_fixers, or globally with g:ale_fixers.
+
+" * in place of the filetype will apply a List of fixers to all files which do not match some filetype in the Dictionary
+" NOTE: that using a plain List for g:ale_fixers is not supported.
+" Example: Use only specified fixers for specified filetype (before ALE has been loaded):
+" let g:ale_fixers = {
+" \   '*': ['remove_trailing_lines', 'trim_whitespace'],
+" \   'javascript': ['eslint'],
+" \}
+
+
+" 1 - Fix files when you save them. 0 - Do not fix files on save.
+let g:ale_fix_on_save = 1
+
+
+" SIGN GUTTER
+" 1 - Keep the sign gutter open at all times; 0 - otherwise.
+" let g:ale_sign_column_always = 1
+
+
+" LOOK
+" Specify what text should be used for signs:
+" let g:ale_sign_error = '>>'
+" let g:ale_sign_warning = '--'
+
+" Background Colors:
+" highlight clear ALEErrorSign
+" highlight clear ALEWarningSign
+
+" If you are using a different color scheme which produces ugly highlights, you can:
+" completely Disable highlighting:
+" let g:ale_set_highlights = 0
+
+" or control the color if highlights:
+" highlight ALEWarning ctermbg=DarkMagenta
+
+" Show 5 lines of errors (default: 10)
+" let g:ale_list_window_size = 5
+
+" Disable loclist
+let g:ale_set_loclist = 0
+
+" Enable quickfix
+let g:ale_set_quickfix = 1
+
+" Show Vim windows for the loclist or quickfix items when a file contains warnings or errors
+" let g:ale_open_list = 1
+
+" This can be useful if you are combining ALE with
+" some other plugin which sets quickfix errors, etc.
+" let g:ale_keep_list_window_open = 1
+
+" Open windows vertically
+" let g:ale_list_vertical = 1
+"===============================================================================
