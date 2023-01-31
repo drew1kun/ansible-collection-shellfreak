@@ -1,0 +1,89 @@
+---
+- name: '[plug] Ensure the installation directory exists per user'
+  ansible.builtin.file:
+    path: ~/.vim/autoload/
+    state: directory
+    owner: "{{ item }}"
+    group: "{{ item if not 'Darwin' in ansible_system else 'wheel' if item == 'root' else 'staff' }}"
+    mode: 0755
+  loop: "{{ vim_users }}"
+  become: true
+  become_user: "{{ item }}"
+  when:
+    - "'user' in vim_env"
+    - vim_users is defined
+  tags: vim
+
+- name: '[plug] Ensure the installation directory exists system-wide'
+  ansible.builtin.file:
+    path: /etc/vim/autoload
+    state: directory
+    owner: "{{ item }}"
+    group: "{{ 'root' if 'Debian' in ansible_os_family else 'wheel' }}"
+    mode: 0755
+  become: true
+  when: "'system' in vim_env"
+  tags: vim
+
+- name: '[plug] Install Plug per user'
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    dest: ~/.vim/autoload/plug.vim
+    owner: "{{ item }}"
+    group: "{{ item if not 'Darwin' in ansible_system else 'wheel' if item == 'root' else 'staff' }}"
+    mode: 0644
+  loop: "{{ vim_users }}"
+  become: true
+  become_user: "{{ item }}"
+  register: vim_plug_result
+  until: vim_plug_result is succeeded
+  when:
+    - "'user' in vim_env"
+    - vim_users is defined
+  tags: vim
+
+- name: '[plug] Install Plug system-wide'
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+    dest: /etc/vim/autoload/plug.vim
+    owner: "{{ item }}"
+    group: "{{ 'root' if 'Debian' in ansible_os_family else 'wheel' }}"
+    mode: 0644
+  register: vim_plug_result
+  until: vim_plug_result is succeeded
+  become: true
+  when: "'system' in vim_env"
+  tags: vim
+
+# IF this task just hangs, this may be because of the following:
+#  - .vimrc or .vim files permissions (see 'which sudo' and become_method: su)
+#  - errors in .vimrc
+#  - on mac when pluginstall triggers git, the OpenSSH gui "wish" dialog appears.
+#   Just find out which plugins requires the github authentication.
+#   The one which I had problems with is 'godlygeek/tabular.git'. Just don't use it.
+#
+# Instead of command: "vim +PlugInstall +qall" we can use:
+# shell:
+#   vim -E -s -c "source /etc/vim/vimrc" -c PlugInstall -c qa
+# ignore_errors: true
+#
+# For troubleshooting add -V switch to this command and run it directly on the target
+- name: '[plug] Downloading plugins using Plug per user'
+  ansible.builtin.command: 'vim -E -s -c "source ~/.vimrc" -c PlugInstall -c qa'
+  loop: "{{ vim_users|flatten(levels=1) }}"
+  become: true
+  become_user: "{{ item }}"
+  register: vim_plugins_result
+  failed_when: vim_plugins_result.rc > 1
+  when:
+    - "'user' in vim_env"
+    - vim_users is defined
+  tags: vim
+
+- name: '[plug] Downloading plugins using Plug system-wide'
+  ansible.builtin.command: 'vim -E -s -c "source /etc/vim/vimrc" -c PlugInstall -c qa'
+  become: true
+  register: vim_plugins_result
+  failed_when: vim_plugins_result.rc > 1
+  when: "'system' in vim_env"
+  tags: vim

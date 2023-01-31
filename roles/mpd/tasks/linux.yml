@@ -1,0 +1,116 @@
+---
+# To do something only if some distro installed on the host
+# Even specific distro version can be specified, see:
+# https://raymii.org/s/tutorials/Ansible_-_Only_if_on_specific_distribution_or_distribution_version.html
+# example:
+#     when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+#
+# ansible_distribuion:  ['MacOSX', 'Debian', 'Ubuntu', 'CentOS', 'Red Hat Enterprise Linux',  'Windows 10']
+# ansible_os_family:    ['Darwin', 'Debian', 'Debian', 'RedHat', 'RedHat',                    'Windows']
+# ansible_system:       ['Darwin', 'Linux',  'Linux',  'Linux',  'Linux',                     'Windows']
+#
+- name: '[linux] Install mpd package'
+  action: >
+    {{ ansible_pkg_mgr }} name=mpd state=present update_cache=true
+  register: mpd_result
+  until: mpd_result is succeeded
+  become: true
+  tags: mpd
+
+- name: '[linux] Install mpc package'
+  action: >
+    {{ ansible_pkg_mgr }} name=mpc state=present update_cache=true
+  become: true
+  register: mpd_mpc_result
+  until: mpd_mpc_result is succeeded
+  when: mpd_install_mpc
+  tags:
+    - mpd
+    - mpc
+
+- name: '[linux] Install ncmpcpp package'
+  action: >
+    {{ ansible_pkg_mgr }} name=ncmpcpp state=present update_cache=true
+  become: true
+  register: mpd_ncmpcpp_result
+  until: mpd_ncmpcpp_result is succeeded
+  when: mpd_install_ncmpcpp
+  tags:
+    - mpd
+    - ncmpcpp
+
+- name: '[linux] Enable and Start mpd service if needed'
+  ansible.builtin.service:
+    name: mpd
+    enabled: "{{ mpd_autostart }}"
+    state: "{% if mpd_autostart %}started{% else %}stopped{% endif %}"
+  become: true
+  tags: mpd
+
+- name: '[linux] Enable mpd socket if needed'
+  ansible.builtin.service:
+    name: mpd.socket
+    enabled: "{% if mpd_autostart %}false{% else %}true{% endif %}"
+    state: "{% if mpd_autostart %}stopped{% else %}started{% endif %}"
+  become: true
+  tags: mpd
+
+- name: '[linux] Generate mpd.conf from template'
+  ansible.builtin.template: src=mpd.conf.j2 dest=/etc/mpd.conf backup=true owner=root group=root mode=0644
+  notify: Restart mpd service
+  become: true
+  tags: mpd
+
+- name: '[linux] Create ~/.ncmpcpp folder for each mpd_user'
+  ansible.builtin.file:
+    path: "{{ '' if item=='root' else '/home' }}/{{ item }}/.ncmpcpp"
+    state: directory
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: 0755
+  become: true
+  loop: "{{ mpd_users }}"
+  when:
+    - mpd_install_ncmpcpp
+    - mpd_users is defined
+    - mpd_users | length > 0
+  tags:
+    - mpd
+    - ncmpcpp
+
+- name: '[linux] Generate ncmpcpp config from template for each mpd_user'
+  ansible.builtin.template:
+    src: ncmpcpp.conf.j2
+    dest: "{{ '' if item=='root' else '/home' }}/{{ item }}/.ncmpcpp/config"
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    mode: 0644
+  become: true
+  loop: "{{ mpd_users }}"
+  when:
+    - mpd_install_ncmpcpp
+    - mpd_users is defined
+    - mpd_users | length > 0
+  tags:
+    - mpd
+    - ncmpcpp
+
+- name: '[linux] Check firewalld stats'
+  ansible.builtin.stat: path="{{ item }}"
+  register: mpd_stat_firewalld
+  become: true
+  loop:
+    - /usr/sbin/firewalld
+    - /sbin/firewalld
+  tags: mpd
+
+- name: '[linux] Open mpd port in firewall'
+  ansible.posix.firewalld: port="{{ mpd_port }}/tcp" zone="{{ item }}" permanent=true immediate=true state=enabled
+  loop: "{{ mpd_firewall_zones }}"
+  become: true
+  when: mpd_stat_firewalld.results[0].stat.exists
+        or
+        mpd_stat_firewalld.results[1].stat.exists
+  vars:
+    ansible_python_interpreter: '/usr/bin/python3'  # Fix the "Python Module not found.." Error
+  tags: mpd

@@ -1,0 +1,30 @@
+---
+- name: '[airline] install custom vim-airline themes per user'
+  ansible.builtin.copy:
+    src: airline-custom-themes/
+    dest: "~/.vim/\
+          {{ 'bundle' if 'vundle' in vim_plugin_manager else 'plugged' if 'plug' in vim_plugin_manager }}\
+          /vim-airline-themes/autoload/airline/themes/"
+    owner: "{{ vim_airline_user }}"
+    group: "{{ vim_airline_user if 'Darwin' not in ansible_os_family else 'wheel' if vim_airline_user == 'root' else 'staff' }}"
+    mode: 0644
+  loop: "{{ vim_users }}"
+  loop_control:
+    loop_var: vim_airline_user
+  become: true
+  become_user: "{{ vim_airline_user }}"
+  when: "'user' in vim_env"
+  tags: vim
+
+- name: '[airline] install custom vim-airline themes system-wide'
+  ansible.builtin.copy:
+    src: "airline-custom-themes/solarized_custom.vim"
+    dest: "/etc/vim/\
+          {{ 'bundle' if 'vundle' in vim_plugin_manager else 'plugged' if 'plug' in vim_plugin_manager }}\
+          /vim-airline-themes/autoload/airline/themes/"
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+  when: "'system' in vim_env"
+  tags: vim

@@ -1,0 +1,14 @@
+"=============================== VIM-COMMENTARY ================================
+filetype on
+{#
+Comments in jinja2 can be escaped in multiple ways:
+http://jinja.pocoo.org/docs/2.10/templates/#escaping
+Alternative to '{% raw %}{% endraw %}' block is using variable expression {{ '{' }}
+#}
+{% raw %}
+" This requires 'filetype on' and must go AFTER it
+" Enure jinja/jinja2 files use correct {{ '{' }} # comments # {{ '}' }} instead of /* */
+autocmd FileType jinja2 setlocal commentstring={#\ %s\ #}
+autocmd FileType jinja setlocal commentstring={#\ %s\ #}
+{% endraw %}
+"===============================================================================

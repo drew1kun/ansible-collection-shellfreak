@@ -1,0 +1,129 @@
+---
+# Create a directory ~/.vim.local in order not to pollute home directory
+- name: "[user] Create {{ vim_root_cust_conf_dir }} directory for custom configuration content"
+  ansible.builtin.file: path="{{ vim_root_conf_plug_dir }}" state=directory mode=0755
+  become: true    # Required for become_user to work
+  become_user: "{{ item }}"
+  loop: "{{ vim_users }}"
+  tags: vim
+
+- name: "[user] Generating {{ vim_root_config }} from template"
+  ansible.builtin.template:
+    src: vimrc.j2
+    dest: "{{ vim_root_config }}"
+    owner: "{{ item }}"
+    group: "{{ item if not 'Darwin' in ansible_system else 'wheel' if item == 'root' else 'staff' }}"
+    mode: 0644
+  loop: "{{ vim_users }}"
+  when:
+    - vim_users is defined
+    - item != "root"
+  become: true
+  become_user: "{{ item }}"
+  tags: vim
+
+- name: "[user] Symlink {{ vim_root_config }} to ~/.vimrc"
+  ansible.builtin.file:
+    src: "{{ vim_root_config }}"
+    dest: ~/.vimrc
+    state: link
+  loop: "{{ vim_users }}"
+  become: true
+  become_user: "{{ item }}"
+  when: vim_users is defined
+  tags: vim
+
+- name: "[user] Generating {{ vim_root_local_config }} from template"
+  ansible.builtin.template:
+    src: vimrc.local.j2
+    dest: "{{ vim_root_local_config }}"
+    owner: "{{ item }}"
+    group: "{{ item if not 'Darwin' in ansible_system else 'wheel' if item == 'root' else 'staff' }}"
+    mode: 0644
+  loop: "{{ vim_users }}"
+  when:
+    - vim_users is defined
+    - item != "root"
+  become: true
+  become_user: "{{ item }}"
+  tags: vim
+
+- name: "[user] Generating {{ vim_root_plugins }} from template"
+  ansible.builtin.template:
+    src: "{{ vim_pm_config }}.j2"
+    dest: "{{ vim_root_plugins }}"
+    owner: "{{ item }}"
+    group: "{{ item if not 'Darwin' in ansible_system else 'wheel' if item == 'root' else 'staff' }}"
+    mode: 0644
+  loop: "{{ vim_users }}"
+  when: vim_users is defined
+  become: true
+  become_user: "{{ item }}"
+  tags: vim
+
+# CONFIGURE PLUGINS
+- name: "[user] Generating the ~/.vim/vim.local/vimrc.<plugin> config files from templates"
+  ansible.builtin.template:
+    src: "{{ item.1.src }}"
+    dest: "{{ item.1.path }}"
+    owner: "{{ item.0 }}"
+    group: "{{ item.0 if not 'Darwin' in ansible_system else 'wheel' if item.0 == 'root' else 'staff' }}"
+    mode: 0644
+  with_nested:
+    - "{{ vim_users }}"
+    - "{{ vim_checklist }}"
+    - "{{ vim_plugins }}"
+  become: true
+  become_user: "{{ item.0 }}"
+  when:
+    - "vim_users is defined"
+    - "item.1.name in item.2.name"
+  tags: vim
+
+- name: '[user] Copying .vim folder to ~/.vim'
+  ansible.builtin.copy:
+    src: vim/
+    dest: ~/.vim/
+    owner: "{{ item }}"
+    group: "{{ item if not 'Darwin' in ansible_system else 'wheel' if item == 'root' else 'staff' }}"
+    directory_mode: 0755
+    mode: 0644
+  loop: "{{ vim_users }}"
+  when: vim_users is defined
+  become: true
+  become_user: "{{ item }}"
+  tags: vim
+
+- name: '[user] Download en.utf-8.spl spell file from ftp'
+  ansible.builtin.get_url:
+    url: ftp://ftp.vim.org/pub/vim/runtime/spell/en.utf-8.spl
+    dest: ~/.vim/spell/en.utf-8.spl
+    owner: "{{ item }}"
+    group: "{{ item if not 'Darwin' in ansible_system else 'wheel' if item == 'root' else 'staff' }}"
+    mode: 0644
+  register: vim_spell_result
+  until: vim_spell_result is succeeded
+  loop: "{{ vim_users }}"
+  when: vim_users is defined
+  become: true
+  become_user: "{{ item }}"
+  tags: vim
+
+- name: '[user] Set EDITOR and TERM environment variables'
+  ansible.builtin.blockinfile:
+    path: ~/.zshrc
+    owner: "{{ item }}"
+    group: "{{ item }}"
+    content: |
+      export EDITOR="/usr/bin/vim"
+      export TERM="xterm-256color"  # For vim colors in tmux
+    marker: "# {mark} ======== VIM role: Ansible managed block ========="
+  become: true
+  become_user: "{{ item }}"
+  loop: "{{ vim_users }}"
+  when: "not 'Darwin' in ansible_system"
+  tags: vim
+
+- name: "[user] Include {{ vim_plugin_manager }} plugin manager and plugins installation tasks"
+  ansible.builtin.include_tasks: "{{ vim_plugin_manager }}.yml"
+  tags: vim

@@ -1,0 +1,49 @@
+#jinja2: lstrip_blocks: "True"
+"================================ VIM-AIRLINE ==================================
+""" FONTS CONFIG:
+let g:airline_powerline_fonts = 1                     " Use Powerline patched fonts (for separators)
+let g:Powerline_symbols = 'fancy'                     " Make Powerline symbols look good
+
+" Fix messed up powerline symbols installed with fontconfig:
+"if !exists('g:airline_symbols')
+"  let g:airline_symbols = {}
+"endif
+"let g:airline_symbols.space = "\ua0"
+
+let g:airline#extensions#tabline#enabled = 1          " Enable Top bar
+
+{% if vim_plugins | selectattr('name','search','w0rp/ale') | list | count > 0 %}
+""" W0RP_ALE_INTEGRATION:
+let g:airline#extensions#ale#enabled = 1              " Set this. Airline will handle the rest.
+
+{% endif %}
+""" DEFINE 'STRAIGHT' TABS:
+"let g:airline#extensions#tabline#left_sep = ' '      " Change left top field shape (better to comment this one)
+"let g:airline#extensions#tabline#left_alt_sep = '|'
+
+
+""" THEMES:
+let g:airline_theme='{{ 'cipherpunk' if 'mustang' or 'cipherpunk' in vim_colorscheme
+else 'nord' if 'nord' in vim_colorscheme
+else 'solarized_custom' if 'solarized' in vim_colorscheme
+else 'powerlineish' }}'
+{% if not 'solarized' in vim_colorscheme %}
+"let g:airline_theme='solarized_custom'
+{% endif %}
+{% if not 'nord' in vim_colorscheme %}
+"let g:airline_theme='nord'
+{% endif %}
+{% if not 'mustang' in vim_colorscheme %}
+"let g:airline_theme='google_dark_custom'  "Suits for mustang vim theme
+{% endif %}
+{% if not 'cipherpunk' in vim_colorscheme %}
+"let g:airline_theme='cipherpunk'
+{% endif %}
+
+" To change theme temporarily run :AirlineTheme <tab>
+
+
+""" CUSTOM SECTORS:
+"let g:airline_section_b = '%{strftime("%c")}'        " Left middle sector: show Date and Time
+"let g:airline_section_y = 'BN: %{bufnr("%")}'        " Right middle sector: show Buffer Number
+"===============================================================================

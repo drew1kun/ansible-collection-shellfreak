@@ -1,0 +1,42 @@
+---
+# This is how it must be done (but this specific gem is not being installed):
+#
+# In case of any colorls-related issue on the configured host issue 'sudo gem install colorls'
+- name: '[users_colorls] Install colorls ruby gem'
+  community.general.gem:
+    name: colorls
+    state: present
+    user_install: false
+    norc: true  # Remove deprecation warning. Try hanging to false if noticed any issues.
+  become: true
+  register: ohmyzsh_colorls_result
+  until: ohmyzsh_colorls_result is succeeded
+  tags: ohmyzsh
+
+- name: '[users_colorls] Ensure the configuration directory exists for all users'
+  ansible.builtin.file:
+    path: ~/.config/colorls
+    state: directory
+    mode: 0755
+  become: true
+  become_user: "{{ item.user }}"
+  loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
+  when:
+    - ohmyzsh_users | length > 1
+    - item.colorls
+  tags: ohmyzsh
+
+- name: '[users_colorls] Copy custom colorls configuration'
+  ansible.builtin.copy:
+    src: colorls/
+    dest: ~/.config/colorls/
+    owner: "{{ item.user }}"
+    group: "{{ item.user if ansible_os_family != 'Darwin' else 'wheel' if item.user == 'root' else 'staff' }}"
+    mode: 0644
+  become: true
+  become_user: "{{ item.user }}"
+  loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
+  when:
+    - ohmyzsh_users | length > 1
+    - item.colorls
+  tags: ohmyzsh

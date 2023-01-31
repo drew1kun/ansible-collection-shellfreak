@@ -1,0 +1,37 @@
+---
+- name: '[nvim] Install neovim on Darwin'
+  community.general.homebrew:
+    name: neovim
+  become: false
+  register: vim_neovim_install_result
+  until: vim_neovim_install_result is succeeded
+  when: "'Darwin' in ansible_system"
+  tags: vim
+
+- name: '[nvim] Install neovim on non-Darwin systems'
+  ansible.builtin.package:
+    name: neovim
+  become: true
+  register: vim_neovim_install_result
+  until: vim_neovim_install_result is succeeded
+  when: "not 'Darwin' in ansible_system"
+  tags: vim
+
+- name: '[nvim] Create neovim configuration by symlinking the existing vim config'
+  ansible.builtin.file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+  loop:
+    # This may require refactoring for system-wide nvim setup:
+    - {src: "{{ vim_root_dir }}", dest: '~/.config/nvim'}
+    - {src: "{{ vim_root_config }}", dest: "{{ vim_root_dir }}/init.vim"}
+    # Info:
+    # - {src: '~/.vim', dest: '~/.config/nvim'}
+    # - {src: '~/.vimrc', dest: '~/.vim/init.vim'}
+  when: "'user' in vim_env"
+  tags: vim
+
+- name: '[nvim] Install pynvim python package for nvim to support python'
+  ansible.builtin.pip:
+    name: pynvim
