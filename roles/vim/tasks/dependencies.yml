@@ -1,0 +1,34 @@
+---
+# Both Plug and Vundle need git for plugins installation
+- name: '[dependencies] Non-MacOS: Install git, ag, ripgrep and CTags'
+  ansible.builtin.package:
+    name:
+      - fzf
+      - git
+      - ripgrep
+      - silversearcher-ag
+      - exuberant-ctags
+    state: present
+  become: true
+  register: vim_dep_result
+  until: vim_dep_result is succeeded
+  when: "not 'Darwin' in ansible_system"
+  tags:
+    - vim
+    - vim_dependencies
+
+- name: '[dependencies] MacOS: Install git, ag, ripgrep'
+  community.general.homebrew:
+    name:
+      - ag
+      - fzf
+      - git
+      - ripgrep
+    state: present
+  become: false
+  register: vim_dep_result
+  until: vim_dep_result is succeeded
+  when: "'Darwin' in ansible_system"
+  tags:
+    - vim
+    - vim_dependencies

@@ -1,0 +1,67 @@
+#=============================== MPD =================================
+mpd_music_dir = "{{ mpd_music_dir }}"
+mpd_connection_timeout = "5"
+mpd_crossfade_time = "5"
+mpd_host = "{{ mpd_ncmpcpp_mpd_host }}"
+mpd_port = "{{ mpd_port }}"
+#=====================================================================
+{%raw%}
+#============================= Behavior ==============================
+allow_for_physical_item_deletion = "yes"
+autocenter_mode = "yes"
+incremental_seeking = "yes"
+playlist_disable_highlight_delay = "0"
+follow_now_playing_lyrics = "yes"
+ignore_leading_the = "yes"
+system_encoding = "utf-8"
+regular_expressions = "extended"
+#=====================================================================
+
+#=========================== Appearence ==============================
+playlist_display_mode = "columns" (classic/columns)
+playlist_editor_display_mode = "columns"
+browser_display_mode = "columns"
+search_engine_display_mode = "columns"
+header_visibility = "yes"
+statusbar_visibility = "yes"
+colors_enabled = "yes"
+main_window_color = "blue"
+header_window_color = "cyan"
+volume_color = "red"
+statusbar_color = "green"
+progressbar_color = "cyan"
+progressbar_elapsed_color = "green"
+progressbar_look = "─█─"
+color1 = "cyan"
+color2 = "magenta"
+active_window_border = "blue"
+display_volume_level = "yes"
+current_item_inactive_column_prefix = "$(cyan)$r"
+selected_item_prefix = "✓ "
+discard_colors_if_item_is_selected = "yes"
+user_interface = "alternative" (classic/alternative)
+alternative_header_first_line_format = "$0$aqqu$/a {$6%a$9 - }{$3%t$9}|{$3%t$9} $0$atqq$/a$9"
+alternative_header_second_line_format = "{{$4%b$9}{ [$8%y$9]}}|{$4%D$9}"
+song_status_format = " $6%a $7⟫⟫ $3%t $7⟫⟫ $4%b "
+song_list_format = "$1 %n │ $5%a$1 │ $8%t $7(%l)$1 $R$6%b $7(%y)$1 $9"
+song_columns_list_format = " (7)[yellow]{nE} (7)[blue]{l} (30)[green]{t} (30)[magenta]{a} (20)[cyan]{b} (4)[white]{yE}"
+#=====================================================================
+
+#============================ Navigation =============================
+cyclic_scrolling = "yes"
+header_text_scrolling = "yes"
+jump_to_now_playing_song_at_start = "yes"
+lines_scrolled = "2"
+#=====================================================================
+
+#=========================== Visualizer ==============================
+visualizer_in_stereo = "yes"
+visualizer_data_source = "/tmp/mpd.fifo"
+visualizer_output_name = "FIFO"
+visualizer_type = "spectrum" (spectrum/wave)
+visualizer_color = "magenta,blue,cyan,green"
+visualizer_look = "•┃"
+visualizer_autoscale = "yes"
+visualizer_spectrum_smooth_look = "yes"
+#=====================================================================
+{%endraw%}

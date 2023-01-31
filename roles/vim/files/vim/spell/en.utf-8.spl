@@ -1,0 +1,12 @@
+This file is needed only on some Linux distros (e.g. Ubuntu 18.04)
+The issue:
+https://github.com/neovim/neovim/issues/2804
+
+This file is not controlled by this repo and resides here:
+ftp://ftp.vim.org/pub/vim/runtime/spell/en.utf-8.spl
+
+It will be substituted during role run.
+
+Leaving this info here so it is more visible.
+Also, do not want to clutter my gruesome role's code with another directory creation task.
+Therefore, using this file and it's parent folder only as an info and placeholder.

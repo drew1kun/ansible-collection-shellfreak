@@ -1,0 +1,19 @@
+---
+vim_root_dir: "/etc/vim"
+vim_root_local_config: "/etc/vim/vimrc.local"
+vim_root_config: "/etc/vim/vimrc"
+vim_root_plugins: "/etc/vim/{{ vim_pm_config }}"
+# Plugins:
+vim_checklist:
+  - {src: vimrc.ale.j2, path: "{{ vim_root_dir }}/vimrc.ale", name: 'ale'}
+  - {src: vimrc.emoji.j2, path: "{{ vim_root_dir }}/vimrc.emoji", name: 'vim-emoji'}
+  - {src: vimrc.nerdtree.j2, path: "{{ vim_root_dir }}/vimrc.nerdtree", name: 'nerdtree'}
+  - {src: vimrc.airline.j2, path: "{{ vim_root_dir }}/vimrc.airline", name: 'airline'}
+  - {src: vimrc.command-t.j2, path: "{{ vim_root_dir }}/vimrc.command-t", name: 'command-t'}
+  - {src: vimrc.ctrlp.j2, path: "{{ vim_root_dir }}/vimrc.ctrlp", name: 'ctrlp'}
+  - {src: vimrc.fzf.j2, path: "{{ vim_root_dir }}/vimrc.fzf", name: 'fzf.vim'}
+  - {src: vimrc.syntastic.j2, path: "{{ vim_root_dir }}/vimrc.syntastic", name: 'syntastic'}
+  - {src: vimrc.signify.j2, path: "{{ vim_root_dir }}/vimrc.signify", name: 'signify'}
+  - {src: vimrc.devicons.j2, path: "{{ vim_root_dir }}/vimrc.devicons", name: 'devicons'}
+  - {src: vimrc.commentary.j2, path: "{{ vim_root_dir }}/vimrc.commentary", name: 'commentary'}
+  - {src: vimrc.asyncomplete.j2, path: "{{ vim_root_dir }}/vimrc.asyncomplete", name: 'asyncomplete.vim'}

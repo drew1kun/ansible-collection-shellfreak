@@ -1,0 +1,37 @@
+---
+galaxy_info:
+  role_name: mpd
+  author: Andrew Shagayev
+  description: Ansible role that installs and configures mpd, mpc and ncmpcpp.
+  license: MIT
+  min_ansible_version: 1.2
+  github_branch: main
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - all
+    - name: MacOSX
+      versions:
+        - all
+  galaxy_tags:
+    - media_player_daemon
+    - mpd
+    - mpc
+    - ncmpcpp
+    - shell
+    - command_line
+    - terminal
+    - ubuntu
+    - trusty
+    - kali
+    - debian
+    - wheezy
+    - jessie
+    - stretch
+    - buster
+    - bullseye
+    - macos
+    - osx

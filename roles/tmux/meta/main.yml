@@ -1,0 +1,39 @@
+---
+galaxy_info:
+  role_name: tmux
+  author: Andrew Shagayev
+  description: Ansible role that installs and configures tmux
+  license: MIT
+  min_ansible_version: 1.7
+  github_branch: master
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - all
+    - name: RedHat
+      versions:
+        - all
+    - name: MacOSX
+      versions:
+        - all
+  galaxy_tags:
+    - tmux
+    - shell
+    - shellfreak
+    - productivity
+    - redhat
+    - centos
+    - ubuntu
+    - trusty
+    - kali
+    - debian
+    - wheezy
+    - jessie
+    - stretch
+    - buster
+    - bullseye
+    - macos
+    - osx

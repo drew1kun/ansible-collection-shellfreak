@@ -1,0 +1,57 @@
+---
+- name: '[vundle] Installing Vundle'
+  ansible.builtin.git:
+    repo: https://github.com/gmarik/Vundle.vim.git
+    dest: "~/.vim/{{ vim_plugins_dir }}/Vundle.vim"
+    version: "{{ vim_vundle_version }}"
+  loop: "{{ vim_users }}"
+  become: true
+  become_user: "{{ item }}"
+  register: vim_vundle_result
+  until: vim_vundle_result is succeeded
+  when:
+    - "'user' in vim_env"
+    - vim_users is defined
+  tags: vim
+
+- name: '[vundle] Installing Vundle'
+  ansible.builtin.git:
+    repo: https://github.com/gmarik/Vundle.vim.git
+    dest: /var/lib/vim/addons/Vundle.vim
+    version: "{{ vim_vundle_version }}"
+  become: true
+  register: vim_vundle_result
+  until: vim_vundle_result is succeeded
+  when: "'system' in vim_env"
+  tags: vim
+
+# IF this task just hangs, this may be because of the following:
+#  - .vimrc or .vim files permissions (see 'which sudo' and become_method: su)
+#  - errors in .vimrc
+#  - on mac when pluginstall triggers git, the OpenSSH gui "wish" dialog appears.
+#   Just find out which plugins requires the github authentication.
+#   The one which I had problems with is 'godlygeek/tabular.git'. Just don't use it.
+#
+# Instead of command: "vim +PluginInstall +qall" we can use:
+# shell:
+#   vim -E -s -c "source /etc/vim/vimrc" -c PluginInstall -c qa
+# ignore_errors: true
+#
+# For troubleshooting add -V switch to this command and run it directly on the target
+- name: '[vundle] Downloading plugins using Vundle per user'
+  ansible.builtin.command: 'vim -E -s -c "source ~/.vimrc" -c PluginInstall -c qa'
+  register: vim_plugins_result
+  failed_when: vim_plugins_result.rc > 1
+  loop: "{{ vim_users }}"
+  become: true
+  become_user: "{{ item }}"
+  when:
+    - "'user' in vim_env"
+    - vim_users is defined
+  tags: vim
+
+- name: '[vundle] Downloading plugins using Vundle system-wide'
+  ansible.builtin.command: 'vim -E -s -c "source /etc/vim/vimrc" -c PluginInstall -c qa'
+  become: true
+  when: "'system' in vim_env"
+  tags: vim

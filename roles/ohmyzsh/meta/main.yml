@@ -1,0 +1,33 @@
+---
+galaxy_info:
+  role_name: ohmyzsh
+  author: Andrew Shagayev
+  description: Ansible role that installs zsh and oh-my-zsh.
+  license: MIT
+  min_ansible_version: 1.7
+  github_branch: master
+  platforms:
+    - name: Ubuntu
+      versions:
+        - all
+    - name: Debian
+      versions:
+        - all
+    - name: RedHat
+      versions:
+        - all
+    - name: MacOSX
+      versions:
+        - all
+  galaxy_tags:
+    - ohmyzsh
+    - debian
+    - ubuntu
+    - kali
+    - redhat
+    - centos
+    - macos
+    - osx
+    - shell
+    - shellfreak
+    - productivity

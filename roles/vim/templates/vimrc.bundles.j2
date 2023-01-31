@@ -1,0 +1,47 @@
+" This file is managed by Ansible, all changes will be lost
+"=================================== VUNDLE ====================================
+if &compatible
+    set nocompatible
+end
+
+filetype off                              " Required
+
+" set the runtime path to include Vundle and initialize
+{% if vim_env == "system" %}
+set rtp+=/var/lib/vim/addons/Vundle.vim/  " for system-wide configuration
+{% else %}
+set rtp+=~/.vim/{{ vim_plugins_dir }}/Vundle.vim/
+{% endif %}
+call vundle#begin()
+" alternatively, pass a path where Vundle should install plugins
+"call vundle#begin('~/some/path/here')
+
+" Let Vundle manage Vundle, required
+Plugin 'gmarik/Vundle.vim'
+
+" Define bundles via Github or non-github repos:
+{% for plugin in vim_plugins %}
+Plugin '{{ plugin.name }}'
+{% endfor %}
+
+if filereadable(expand("~/.vimrc.bundles.local"))
+    source ~/.vimrc.bundles.local
+endif
+
+call vundle#end()
+
+" use filetype based indenting (does not interfere with 'autoindent')
+" although may interfere with 'smartindent' and 'cindent'
+filetype plugin indent on                 " required
+
+" To ignore plugin indent changes, instead use:
+"filetype plugin on
+
+" Prevent filetype indent plugin indenting current line when pressing Enter
+" This must go after 'filetype plugin indent on'
+"augroup overrideftplugins
+"    au!
+"    au FileType * set cinkeys= indentkeys=
+"augroup END
+" Added this function to .vim/after/ftplugin/yaml.vim
+"===============================================================================

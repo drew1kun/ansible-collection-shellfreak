@@ -1,0 +1,102 @@
+---
+- name: '[darwin] Determine brew prefix'
+  ansible.builtin.command: 'brew --prefix'
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  register: mpd_brew_prefix
+  changed_when: false
+  tags: mpd
+
+- name: '[darwin] Install mpd with Homebrew'
+  community.general.homebrew: name=mpd state=present
+  register: mpd_result
+  until: mpd_result is succeeded
+  tags: mpd
+
+- name: '[darwin] Install mpc with Homebrew'
+  community.general.homebrew: name=mpc state=present
+  register: mpd_mpc_result
+  until: mpd_mpc_result is succeeded
+  when: mpd_install_mpc
+  tags:
+    - mpd
+    - mpc
+
+- name: '[darwin] Install ncmpcpp with Homebrew'
+  community.general.homebrew: name=ncmpcpp state=present
+  register: mpd_ncmpcpp_result
+  until: mpd_ncmpcpp_result is succeeded
+  when: mpd_install_ncmpcpp
+  tags:
+    - mpd
+    - ncmpcpp
+
+- name: '[darwin] Check if ~/Library/LaunchAgents/homebrew.mxcl.mpd.plist exists'
+  ansible.builtin.stat: path=~/Library/LaunchAgents/homebrew.mxcl.mpd.plist
+  register: mpd_stat_plist
+  tags: mpd
+
+- name: '[darwin] Enable mpd service to start on login'
+  ansible.builtin.command: "{{ mpd_brew_prefix.stdout }}/bin/brew services start mpd"
+  when:
+    - mpd_autostart
+    - not mpd_stat_plist.stat.exists
+  tags: mpd
+
+- name: '[darwin] Create ~/.mpd/ directory for each mpd_user'
+  ansible.builtin.file:
+    path: "/{{ 'var' if item=='root' else 'Users' }}/{{ item }}/.mpd"
+    state: directory
+    owner: "{{ item }}"  # Works only if gathering facts. Turns to root if using 'become: true'
+    group: staff
+    mode: 0755
+  become: true
+  loop: "{{ mpd_users }}"
+  tags: mpd
+
+- name: '[darwin] Generate mpd.conf from template for each mpd_user'
+  ansible.builtin.template:
+    src: mpd.conf.j2
+    dest: "/{{ 'var' if item=='root' else 'Users' }}/{{ item }}/.mpd/mpd.conf"
+    backup: true
+    owner: "{{ item }}"
+    group: staff
+    mode: 0644
+  become: true
+  loop: "{{ mpd_users }}"
+  notify: Restart mpd service with brew services command
+  tags: mpd
+
+- name: '[darwin] Create ~/.ncmpcpp folder for each mpd_user'
+  ansible.builtin.file:
+    path: "/{{ 'var' if item=='root' else 'Users' }}/{{ item }}/.ncmpcpp"
+    state: directory
+    owner: "{{ item }}"
+    group: "staff"
+    mode: 0755
+  become: true
+  loop: "{{ mpd_users }}"
+  when:
+    - mpd_install_ncmpcpp
+    - mpd_users is defined
+    - mpd_users | length > 0
+  tags:
+    - mpd
+    - ncmpcpp
+
+- name: '[darwin] Generate ncmpcpp config from template for each mpd_user'
+  ansible.builtin.template:
+    src: ncmpcpp.conf.j2
+    dest: "/{{ 'var' if item=='root' else 'Users' }}/{{ item }}/.ncmpcpp/config"
+    owner: "{{ item }}"
+    group: "staff"
+    mode: 0644
+  become: true
+  loop: "{{ mpd_users }}"
+  when:
+    - mpd_install_ncmpcpp
+    - mpd_users is defined
+    - mpd_users | length > 0
+  tags:
+    - mpd
+    - ncmpcpp

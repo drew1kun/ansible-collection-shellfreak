@@ -1,0 +1,17 @@
+- name: '[config] Check the tmux version'
+  ansible.builtin.shell: tmux -V | tr -d '[A-Z][a-z][ ]'
+  register: tmux_version
+  changed_when: false
+  tags: tmux
+
+- name: '[config] Generate tmux custom configuration'
+  ansible.builtin.template:
+    src: tmux.conf.j2
+    dest: "{{ tmux_root_dir if item == 'root' else tmux_home_dir ~ item }}/.tmux.conf"
+    mode: 0644
+    owner: "{{ item }}"
+    group: "{{ item if 'Darwin' not in ansible_os_family else 'wheel' if item == 'root' else 'staff' }}"
+  when: "item.state is not defined or 'present'in item.state"
+  loop: "{{ tmux_users|flatten(levels=1) }}"
+  become: true
+  tags: tmux

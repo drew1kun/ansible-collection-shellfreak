@@ -1,0 +1,29 @@
+---
+- name: '[Darwin] Make sure vim is installed'
+  community.general.homebrew:
+    name: vim
+    state: present
+  register: vim_install_result
+  until: vim_install_result is succeeded
+  become: false
+  tags: vim
+
+- name: '[Darwin] Check which SHELL is running'
+  ansible.builtin.command: "echo ${SHELL}"
+  register: vim_shell
+  changed_when: false
+  tags: vim
+
+- name: '[Darwin] Set vim as a default editor for visudo in ~/bash_profile if using bash'
+  ansible.builtin.lineinfile:
+    path: "~/.{{ 'zshrc' if 'zsh' in vim_shell.stdout else 'bash_profile' if 'bash' in vim_shell.stdout }}"
+    regexp: '^.*export\sEDITOR=.*'
+    line: 'export EDITOR=vim visudo'
+  tags: vim
+
+- name: '[Darwin] Set TERM environment variable in ~/.bash_profile if using bash'
+  ansible.builtin.lineinfile:
+    path: "~/.{{ 'zshrc' if 'zsh' in vim_shell.stdout else 'bash_profile' if 'bash' in vim_shell.stdout }}"
+    regexp: '^.*export\sTERM=.*'
+    line: 'export TERM="xterm-256color"'
+  tags: vim

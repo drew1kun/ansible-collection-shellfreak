@@ -1,0 +1,37 @@
+---
+galaxy_info:
+  role_name: vim
+  author: Andrew Shagayev
+  description: Ansible role that installs and configures vim | neovim
+    with plugin managers plug | vundle with a set of preconfigured plugins and themes.
+  license: MIT
+  min_ansible_version: 1.9
+  platforms:
+    - name: MacOSX
+      versions: all
+    - name: Ubuntu
+      versions:
+        - trusty
+    - name: Debian
+      versions:
+        - all
+  galaxy_tags:
+    - vim
+    - development
+    - system
+    - nvim
+    - neovim
+    - vundle
+    - vim_plug
+    - vim_plugin_manager
+    - ubuntu
+    - trusty
+    - kali
+    - debian
+    - wheezy
+    - jessie
+    - stretch
+    - buster
+    - bullseye
+    - macos
+    - osx

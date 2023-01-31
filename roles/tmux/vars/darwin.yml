@@ -1,0 +1,3 @@
+---
+tmux_root_dir: '/var/root'
+tmux_home_dir: '/Users/'

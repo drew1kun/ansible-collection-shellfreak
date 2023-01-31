@@ -1,0 +1,174 @@
+# This file is managed by Ansible, all changes will be lost
+
+{% if ohmyzsh_setup_tmux|default(false) %}
+# Automatically start tmux when starting new shell
+{% if 'tmux' in (ohmyzsh_default_plugins|default|list + item.plugins|default|list) %}
+ZSH_TMUX_AUTOSTART=false  # true - will start tmux automatically ATTACHED TO CURRENT SESSION!
+{% endif %}
+if [ "$TMUX" = "" ]; then tmux; fi
+#xterm -e tmux
+{% endif %}
+
+# Path to your oh-my-zsh configuration.
+ZSH="{{ ohmyzsh_install_dir }}"
+
+# Disable odd message regading completions on mac when doing 'sudo su'
+ZSH_DISABLE_COMPFIX=true
+
+{% if 'Darwin' in ansible_os_family %}
+# Specify custom ohmyzsh cache, because on mac /usr/ dir is read-only:
+ZSH_CACHE_DIR="{{ ohmyzsh_cache_dir }}"
+{% endif %}
+
+# Colorize output
+export CLICOLOR=1
+export LSCOLORS=ExFxBxDxCxegedabagacad
+
+# For Solarized
+export TERM="xterm-256color"
+
+# Set name of the theme to load.
+# Look in ~/.oh-my-zsh/themes/
+# Optionally, if you set this to "random", it'll load a random theme each
+# time that oh-my-zsh is loaded.
+# ZSH_THEME="random"
+ZSH_THEME="{{ item.theme if
+  (item.theme is defined
+  and 'powerlevel9k/powerlevel9k' in item.theme
+  and ohmyzsh_powerlevel9k|default(false)) or
+  (item.theme is defined
+  and 'powerlevel10k/powerlevel10k' in item.theme
+  and ohmyzsh_powerlevel10k|default(false))
+  else ohmyzsh_default_theme }}"
+
+{% if ohmyzsh_powerlevel9k|default(false) %}
+{% if item.theme is defined and item.theme == 'powerlevel9k/powerlevel9k' %}
+source "{{ ohmyzsh_powerlevel9k_cfg }}"
+
+{% endif %}
+{% endif %}
+{% if ohmyzsh_powerlevel10k|default(true) %}
+{% if item.theme is defined and item.theme == 'powerlevel10k/powerlevel10k' %}
+# Source the existing p10k config (if it exists)
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+{% endif %}
+{% endif %}
+# Set to this to use case-sensitive completion
+# CASE_SENSITIVE="true"
+
+# Comment this out to disable bi-weekly auto-update checks
+#DISABLE_AUTO_UPDATE="true"
+
+# Uncomment to change how many often would you like to wait before auto-updates occur? (in days)
+# export UPDATE_ZSH_DAYS=13
+
+# Uncomment following line if you want to disable colors in ls
+# DISABLE_LS_COLORS="true"
+
+# Uncomment following line if you want to disable autosetting terminal title.
+# DISABLE_AUTO_TITLE="true"
+
+# Uncomment following line if you want red dots to be displayed while waiting for completion
+# COMPLETION_WAITING_DOTS="true"
+
+{% if item is defined and item.ssh_ids is defined %}
+# SSH ids
+zstyle :omz:plugins:ssh-agent agent-forwarding on
+zstyle :omz:plugins:ssh-agent identities {{ item.ssh_ids|join(' ') }}
+
+{% endif %}
+
+# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
+# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
+# Example format:count plugins=(rails git textmate ruby lighthouse)
+{% if ohmyzsh_default_plugins is defined or (item is defined and item.plugins is defined) %}
+default_plugins=(
+{% for plugin in (ohmyzsh_default_plugins|default|list + item.plugins|default|list) %}
+    {{ plugin }}
+{% endfor %}
+)
+
+{% endif %}
+{% if ohmyzsh_custom_plugins is defined %}
+custom_plugins=(
+{% for plugin in ohmyzsh_custom_plugins|list %}
+    {{ plugin }}
+{% endfor %}
+)
+
+{% endif %}
+if [[ -f "${HOME}/.zsh/plugins" ]]; then
+    . "${HOME}/.zshrc/plugins"
+    plugins=( ${default_plugins[@]} ${custom_plugins[@]} )
+elif [[ -d "${ZSH}/custom/plugins" ]]; then
+    plugins=( ${default_plugins[@]} ${custom_plugins[@]} )
+else
+    plugins=${default_plugins}
+fi
+
+{% if 'zsh-syntax-highlighting' in ohmyzsh_custom_plugins|default|list %}
+# Make zsh look like fish:
+export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=white'
+{% endif %}
+
+if (( ! ${fpath[(I)/usr/local/share/zsh/site-functions]} )); then
+  FPATH=/usr/local/share/zsh/site-functions:$FPATH
+fi
+
+source "${ZSH}/oh-my-zsh.sh"
+{% if 'kubectl' in (ohmyzsh_default_plugins|default|list + item.plugins|default|list) %}
+source <(kubectl completion zsh)
+{% endif %}
+
+# Customize to your needs...
+export PATH="${HOME}/.local/bin:${HOME}/bin::${PATH}"           # User-wide installed binaries
+{% if 'Darwin' in ansible_os_family %}
+export PATH="$(brew --prefix)/bin:${PATH}"                      # Binaries installed with Homebrew
+export PATH="$(brew --prefix)/sbin:${PATH}"                     # Sys Binaries installed with Homebrew
+export PATH="${PATH}:${HOME}/.krew/bin"                         # Binaries installed with krew
+export PATH="$(brew --prefix)/opt/libpq/bin:${PATH}"            # libpq binaries
+export PATH="$(brew --prefix openvpn)/sbin:${PATH}"             # Brew installed openvpn bins
+{% endif %}
+export PATH="${HOME}/.rbenv/bin:${HOME}/.rbenv/shims:${PATH}"   # Rbenv: change ruby versions
+export GPG_TTY=$(tty)
+export EDITOR=vim visudo
+export SHELL="{{ (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='stdout')).zsh }}"
+export LC_TYPE="en_US.UTF-8"
+export LANG="en_US.UTF-8"
+
+# Load aliases
+if [ -f "${HOME}/.zsh/aliases" ]; then
+    source "${HOME}/.zsh/aliases"
+fi
+
+# Load custom configs
+if [ -d "${HOME}/.zsh/conf.d" ]; then
+    for i in "${HOME}/.zsh/conf.d/*.sh"; do
+        if [ -r "${i}" ]; then
+            . "${i}"
+        fi
+    done
+fi
+
+# Load Rails environment variables if present
+if [ -f "${HOME}/.rails.env" ]; then
+    source "${HOME}/.rails.env"
+fi
+
+# Source fzf
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+
+{% if 'terraform' in (ohmyzsh_default_plugins|default|list + item.plugins|default|list) %}
+{% if (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='rc')).terraform|int > 0 %}
+# Added with `terraform -install-autocomplete` command.
+# If terraform autocompletions do not work, remove these lines and reissue the command
+#autoload -U +X bashcompinit && bashcompinit
+#complete -o nospace -C {{ (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='stdout')).terraform }} terraform
+{% else %}
+# Added with `terraform -install-autocomplete` command.
+# If terraform autocompletions do not work, remove these lines and reissue the command
+autoload -U +X bashcompinit && bashcompinit
+complete -o nospace -C {{ (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='stdout')).terraform }} terraform
+{% endif %}
+{% endif %}

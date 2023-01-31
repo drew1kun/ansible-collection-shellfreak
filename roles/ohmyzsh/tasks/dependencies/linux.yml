@@ -1,0 +1,21 @@
+---
+- name: '[dependencies:linux] Install ohmyzsh dependencies for non-Darwin systems: zsh, git'
+  ansible.builtin.package:
+    name: ['zsh', 'git', 'bc']
+    state: present
+  become: true
+  register: ohmyzsh_dep_result
+  until: ohmyzsh_dep_result is succeeded
+  when: "'Linux' in ansible_system"
+  tags:
+    - ohmyzsh
+    - ohmyzsh_dependencies
+
+- name: '[dependencies:linux] Make sure locales package is installed on Debian'
+  ansible.builtin.apt: name=locales state=present
+  register: ohmyzsh_dep_result
+  until: ohmyzsh_dep_result is succeeded
+  when: "'Debian' in ansible_os_family"
+  tags:
+    - ohmyzsh
+    - ohmyzsh_dependencies

@@ -1,0 +1,9 @@
+---
+- name: '[darwin] Install tmux for MacOS'
+  community.general.homebrew:
+    name: tmux
+    state: present
+  become: false
+  register: tmux_install
+  until: tmux_install is succeeded
+  tags: tmux

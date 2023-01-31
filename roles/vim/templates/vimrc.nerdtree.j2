@@ -1,0 +1,22 @@
+"=================================== NERDTREE ==================================
+" Default symbols for directories:
+"let g:NERDTreeDirArrowExpandable = '▸'
+"let g:NERDTreeDirArrowCollapsible = '▾'
+
+" Press F3 to toggle the NerdTree panel
+nmap <F3> :NERDTreeToggle<CR> " NERDTree PLUGIN
+
+let NERDTreeIgnore=['\.pyc$', '\~$'] "ignore files in NERDTree
+let NERDTreeIgnore=['\.pyc$', '\.swp$', '\.DS_Store$', '\~$'] "ignore files in NERDTree
+
+" Start NERDTree if running 'vim' without file specified
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
+
+" Start NERDTree when vim starts up on opening a directory
+autocmd StdinReadPre * let s:std_in=1
+autocmd VimEnter * if argc() == 1 && isdirectory(argv()[0]) && !exists("s:std_in") | exe 'NERDTree' argv()[0] | wincmd p | ene | endif
+
+" Close vim if the only window left open is a NERDTree
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
+"===============================================================================

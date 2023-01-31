@@ -1,0 +1,41 @@
+{% if vim_plugins | selectattr('name','search','vim-sensible') | list | count > 0 %}
+"=========================== START WITH VIM-SENSIBLE ===========================
+" Using 'tpope/vim-sensible' plugin as a starting point for fresh vim config
+"===============================================================================
+
+{% endif %}
+"===============================================================================
+" NOTE: ~/.vimrc is just a symlink to this file ({{ vim_root_config }})
+" if manually transfering the vim configuration between machines, all you need
+" is .vim directory to be moved to a new system and the symlink to be created.
+" E.g:    'ln -s {{ vim_root_config }} ~/.vimrc'
+"===============================================================================
+
+"================================ LOCAL CONFIG =================================
+" NOTE: for Windows, move your .vim to ~\AppData\Local\nvim and uncomment this:
+" set runtimepath+=~/AppData/Local/nvim/.vim,~/AppData/Local/nvim/.vim/after
+" set packpath+=~/AppData/Local/nvim/.vim
+if filereadable(expand("{{ vim_root_local_config }}"))
+    source {{ vim_root_local_config }}
+endif
+"===============================================================================
+
+"============================== PLUGINS CONFIG =================================
+{% for plugin in vim_plugins %}
+{% for check in vim_checklist %}
+{% if check.name in plugin.name and 'vim-airline-themes' not in plugin.name %}
+"""{{ check.name }}
+if filereadable(expand("{{ check.path }}"))
+    source {{ check.path }}
+endif
+
+{% endif %}
+{% endfor %}
+{% endfor %}
+"===============================================================================
+
+"=============================== PluginManager =================================
+if filereadable(expand("{{ vim_root_plugins }}"))
+    source {{ vim_root_plugins }}   " load default plugins
+endif
+"===============================================================================
