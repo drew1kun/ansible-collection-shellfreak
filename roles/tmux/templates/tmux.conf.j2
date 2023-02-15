@@ -10,17 +10,18 @@ set -g mouse on
 #set -g default-terminal "screen-256color"
 
 # Reload config with 'Ctr+B' and then 'r':
-bind-key r source-file ~/.tmux.conf \; display-message "tmux.conf reloaded."
+bind 'r' source-file ~/.tmux.conf \; display-message "tmux.conf reloaded."
+bind 'R' source-file ~/.tmux.conf \; display-message "tmux.conf reloaded."
 
 # screen like behaviour:
-bind ^k confirm-before -p "kill-window #S? (y/n)" kill-window
+bind '^k' confirm-before -p "kill-window #S? (y/n)" kill-window
 
 # Split windows:
-bind | split-window -h
-bind _ split-window -v
+bind '|' split-window -h
+bind '_' split-window -v
 
 # rotate
-bind ^r rotate-window -D
+bind '^r' rotate-window -D
 
 # set window notifications
 set -g monitor-activity on
@@ -30,8 +31,8 @@ set -g visual-activity on
 set -g automatic-rename on
 
 # toggle synchronization
-bind e setw synchronize-panes on
-bind E setw synchronize-panes off
+bind 'e' setw synchronize-panes on
+bind 'E' setw synchronize-panes off
 
 #============================= VI mode =============================
 # e.g.: in command mode (prefix then `:`) press `Esc` and use `H` and `L` to move left and right):
@@ -44,11 +45,13 @@ set -g mode-keys vi
 # 'v' key for selection:
 bind -T copy-mode-vi 'v' send -X begin-selection
     {% if 'Darwin' in ansible_os_family %}
+# Send selection (including mouse-selection) to clipobard:
 # MacOS:
 bind -T copy-mode-vi 'y' send-keys -X copy-selection-and-cancel
     {% else %}
 # Linux:
-bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel 'xclip -in -selection clipboard'
+bind -T copy-mode-vi 'y' send-keys -X copy-pipe-and-cancel 'xclip -in -selection clipboard'
+bind -T copy-mode-vi MouseDragEnd1Pane send-keys -X copy-pipe-and-cancel "xclip -selection clipboard -i"
     {% endif %}
 #======================= tmux >= 2.3 - END =========================
 {% else %}
@@ -58,8 +61,9 @@ bind -T copy-mode-vi y send-keys -X copy-pipe-and-cancel 'xclip -in -selection c
 set -g @shell_mode 'vi'
 
 # 'v' key for selection:
-bind-key -t vi-copy 'v' begin-selection
+bind -t vi-copy 'v' begin-selection
     {% if 'Darwin' in ansible_os_family %}
+# Send selection (including mouse-selection) to clipobard:
 # MacOS:
 bind -t vi-copy 'y' copy-pipe 'pbcopy -in -selection clipboard'
     {% else %}
@@ -69,18 +73,18 @@ bind -t vi-copy 'y' copy-pipe 'xclip -in -selection clipboard'
 #======================== tmux < 2.3 - END =========================
 {% endif %}
 # move around panes with hjkl, as one would in vim after pressing ctrl-w
-bind h select-pane -L
-bind j select-pane -D
-bind k select-pane -U
-bind l select-pane -R
+bind 'h' select-pane -L
+bind 'j' select-pane -D
+bind 'k' select-pane -U
+bind 'l' select-pane -R
 
 # resize panes like vim
 # feel free to change the "2" to however many lines you want to resize by,
 # only 1 at a time can be slow
-bind < resize-pane -L 2
-bind > resize-pane -R 2
-bind - resize-pane -D 2
-bind + resize-pane -U 2
+bind '<' resize-pane -L 2
+bind '>' resize-pane -R 2
+bind '-' resize-pane -D 2
+bind '+' resize-pane -U 2
 #========================== VI mode - END ==========================
 
 #======================= TMUX PLUGIN MANAGER =======================
