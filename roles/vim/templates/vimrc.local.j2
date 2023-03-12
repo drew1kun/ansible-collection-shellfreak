@@ -107,7 +107,23 @@ noremap <C-K> <C-W>k
 noremap <C-H> <C-W>h
 noremap <C-L> <C-W>l
 
-" Wrap mode on/off with ',-z' (similar to VSCode's Alt-z)
+" Toggle Numbers Column with ',-1':
+nnoremap <Leader>1 :set number!<CR>
+
+" Toggle Sign Column (on the left behind numbers Signify/Gitgutter) with ',-2':
+nnoremap <Leader>2 :call ToggleSignColumn()<CR>
+" Toggle signcolumn. Works on vim>=8.1 or NeoVim
+function! ToggleSignColumn()
+    if !exists("b:signcolumn_on") || b:signcolumn_on
+        set signcolumn=no
+        let b:signcolumn_on=0
+    else
+        set signcolumn=yes
+        let b:signcolumn_on=1
+    endif
+endfunction
+
+" Toggle Wrap mode with ',-z' (similar to VSCode's Alt-z)
 nmap <silent> <leader>z :set wrap!<CR>
 
 " Display all buffers info with ',+b'
@@ -221,7 +237,7 @@ set clipboard=unnamedplus           " Use system's clipboard when yanking
 set title                           " Change the terminal's title to VIM/NVIM
 set fileformat=unix                 " Endline set to \n
 set encoding=utf-8                  " Set Encoding to UTF-8
-set modifiable                      " Make a buffer modifiable (needed for setting fileformat to unix | mac | dos)
+set modifiable                      " Make a buffer modifiable: needed for setting fileformat to unix | mac | dos
 set cf                              " Enable error files & error jumping
 set autowrite                       " Automatically :w before running commands
 set shm=atIWswxrnmlf                " Message formats
