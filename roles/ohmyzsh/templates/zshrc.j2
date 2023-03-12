@@ -6,7 +6,6 @@
 ZSH_TMUX_AUTOSTART=false  # true - will start tmux automatically ATTACHED TO CURRENT SESSION!
 {% endif %}
 if [ "$TMUX" = "" ]; then tmux; fi
-#xterm -e tmux
 {% endif %}
 
 # Path to your oh-my-zsh configuration.
@@ -72,7 +71,7 @@ source "{{ ohmyzsh_powerlevel9k_cfg }}"
 # Uncomment following line if you want red dots to be displayed while waiting for completion
 # COMPLETION_WAITING_DOTS="true"
 
-{% if item is defined and item.ssh_ids is defined %}
+{% if item is defined and (item.ssh_ids|default([])|length>0) %}
 # SSH ids
 zstyle :omz:plugins:ssh-agent agent-forwarding on
 zstyle :omz:plugins:ssh-agent identities {{ item.ssh_ids|join(' ') }}
@@ -122,15 +121,16 @@ source <(kubectl completion zsh)
 {% endif %}
 
 # Customize to your needs...
-export PATH="${HOME}/.local/bin:${HOME}/bin::${PATH}"           # User-wide installed binaries
 {% if 'Darwin' in ansible_os_family %}
-export PATH="$(brew --prefix)/bin:${PATH}"                      # Binaries installed with Homebrew
+export PATH="{{ ohmyzsh_brew_prefix.stdout }}/bin:${PATH}"                         # Binaries installed with Homebrew
 export PATH="$(brew --prefix)/sbin:${PATH}"                     # Sys Binaries installed with Homebrew
-export PATH="${PATH}:${HOME}/.krew/bin"                         # Binaries installed with krew
 export PATH="$(brew --prefix)/opt/libpq/bin:${PATH}"            # libpq binaries
 export PATH="$(brew --prefix openvpn)/sbin:${PATH}"             # Brew installed openvpn bins
 {% endif %}
-export PATH="${HOME}/.rbenv/bin:${HOME}/.rbenv/shims:${PATH}"   # Rbenv: change ruby versions
+export PATH="${PATH}:${HOME}/.krew/bin"                         # Krew: installed binaries
+export PATH="${PATH}:${HOME}/.rbenv/bin:${HOME}/.rbenv/shims"   # Rbenv: managing ruby versions
+export PATH="${PATH}:${HOME}/.cargo/bin"                        # Cargo: installed crates
+export PATH="${PATH}:${HOME}/.local/bin:${HOME}/bin"            # User-wide installed binaries
 export GPG_TTY=$(tty)
 export EDITOR=vim visudo
 export SHELL="{{ (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='stdout')).zsh }}"
@@ -160,14 +160,12 @@ fi
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 {% if 'terraform' in (ohmyzsh_default_plugins|default|list + item.plugins|default|list) %}
-{% if (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='rc')).terraform|int > 0 %}
 # Added with `terraform -install-autocomplete` command.
 # If terraform autocompletions do not work, remove these lines and reissue the command
+{% if (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='rc')).terraform|int > 0 %}
 #autoload -U +X bashcompinit && bashcompinit
 #complete -o nospace -C {{ (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='stdout')).terraform }} terraform
 {% else %}
-# Added with `terraform -install-autocomplete` command.
-# If terraform autocompletions do not work, remove these lines and reissue the command
 autoload -U +X bashcompinit && bashcompinit
 complete -o nospace -C {{ (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='stdout')).terraform }} terraform
 {% endif %}
