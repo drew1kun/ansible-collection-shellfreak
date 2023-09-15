@@ -7,7 +7,6 @@
   register: ohmyzsh_binaries
   changed_when: false
   failed_when: false
-  tags: ohmyzsh
 
 - name: "[install] Clone ohmyzsh and plugins for fish-like behaviour"
   ansible.builtin.git:
@@ -29,7 +28,6 @@
       dest: "{{ ohmyzsh_install_dir }}/custom/plugins/zsh-history-substring-search"
     - repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
       dest: "{{ ohmyzsh_install_dir }}/custom/plugins/zsh-syntax-highlighting"
-  tags: ohmyzsh
 
 - name: "[install] Clone Powerlevel9k theme to custom directory"
   ansible.builtin.git:
@@ -43,7 +41,6 @@
   register: ohmyzsh_pl9k_clone
   until: ohmyzsh_pl9k_clone is succeeded
   when: ohmyzsh_powerlevel9k is defined and true
-  tags: ohmyzsh
 
 - name: "[install] Clone powerlevel10k theme to custom directory"
   ansible.builtin.git:
@@ -57,7 +54,6 @@
   register: ohmyzsh_pl10k_clone
   until: ohmyzsh_pl10k_clone is succeeded
   when: ohmyzsh_powerlevel10k is defined and true
-  tags: ohmyzsh
 
 - name: "[install] Setup zprofile for zsh"
   ansible.builtin.template:
@@ -68,7 +64,6 @@
     group: root
   become: true
   when: "'Darwin' not in ansible_os_family"
-  tags: ohmyzsh
 
 # For Debian and maybe other distros:
 - name: "[install] Set up en_US.UTF-8 locale"
@@ -79,4 +74,3 @@
     - "'Darwin' not in ansible_os_family"
     - "'RedHat' not in ansible_os_family"
   become: true
-  tags: ohmyzsh
