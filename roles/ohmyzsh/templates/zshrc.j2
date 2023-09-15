@@ -5,7 +5,7 @@
 {% if 'tmux' in (ohmyzsh_default_plugins|default|list + item.plugins|default|list) %}
 ZSH_TMUX_AUTOSTART=false  # true - will start tmux automatically ATTACHED TO CURRENT SESSION!
 {% endif %}
-if [ "$TMUX" = "" ]; then tmux; fi
+if [ "${TMUX}" = "" ]; then tmux; fi
 {% endif %}
 
 # Path to your oh-my-zsh configuration.
@@ -112,7 +112,7 @@ export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=white'
 {% endif %}
 
 if (( ! ${fpath[(I)/usr/local/share/zsh/site-functions]} )); then
-  FPATH=/usr/local/share/zsh/site-functions:$FPATH
+  FPATH=/usr/local/share/zsh/site-functions:${FPATH}
 fi
 
 source "${ZSH}/oh-my-zsh.sh"
