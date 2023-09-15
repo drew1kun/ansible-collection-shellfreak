@@ -37,3 +37,4 @@
   when:
     - "'terraform' in ohmyzsh_default_plugins|default|list + ohmyzsh_users|map(attribute='plugins',default=[])|flatten"
     - (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='rc')).terraform|int > 0
+  tags: ohmyzsh
