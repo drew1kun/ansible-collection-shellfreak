@@ -1,6 +1,6 @@
 namespace: drew1kun
 name: shellfreak
-version: 1.1.4
+version: 1.1.5
 readme: README.md
 authors:
 - Andrew Shagayev <drew-kun@protonmail.com>
@@ -26,10 +26,11 @@ tags:
 #dependencies:
 #  community.general: ">=3.0.0"
 
-repository: https://github.com/drew1kun/ansible-collection-slickshell.git
-documentation: https://github.com/drew1kun/ansible-collection-slickshell/blob/main/README.md
-homepage: https://github.com/drew1kun/ansible-collection-slickshell
-issues: https://github.com/drew1kun/ansible-collection-slickshell/issues
+repository: https://github.com/drew1kun/ansible-collection-shellfreak.git
+documentation: https://github.com/drew1kun/ansible-collection-shellfreak/blob/main/README.md
+homepage: https://github.com/drew1kun/ansible-collection-shellfreak
+issues: https://github.com/drew1kun/ansible-collection-shellfreak/issues
 
 build_ignore:
 - '*.tar.gz'
+- 'galaxy-publish.yml'
