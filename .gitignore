@@ -2,7 +2,10 @@
 *.swp
 .DS_Store
 roles/.DS_Store
-*.retry
 *.tar.gz
 ansible.cfg
 collections
+*.pyc
+*.retry
+test/results
+galaxy-publish.yml

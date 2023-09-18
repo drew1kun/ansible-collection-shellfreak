@@ -11,7 +11,6 @@
     - "'Darwin' in ansible_os_family"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ohmyzsh
 
 - name: '[users] Copy default zshrc to user home directory'
   ansible.builtin.template:
@@ -23,7 +22,6 @@
   when: "item.state is not defined or 'present'in item.state"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ohmyzsh
 
 - name: '[users] Create directory structure'
   ansible.builtin.file:
@@ -35,7 +33,6 @@
   when: "item.state is not defined or 'present'in item.state"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ohmyzsh
 
 - name: '[users] Generate default aliases'
   ansible.builtin.template:
@@ -47,7 +44,6 @@
   when: "item.state is not defined or 'present'in item.state"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ohmyzsh
 
 - name: '[users] Generate custom aliases'
   ansible.builtin.template:
@@ -59,7 +55,6 @@
   when: "item.state is not defined or 'present'in item.state"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ohmyzsh
 
 # Powerlevel9k
 - name: '[users] Generate Powerlevel9k custom configuration'
@@ -76,7 +71,6 @@
     - "'powerlevel9k' in item.theme"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ohmyzsh
 
 - name: '[users] Add custom sudoers config to not reset environment variables when doing `sudo -s` for each zsh user'
   ansible.builtin.template:
@@ -90,7 +84,6 @@
     - ohmyzsh_powerlevel9k
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ohmyzsh
 
 # Powerlevel10k
 - name: '[users] Generate Powerlevel10k custom configuration'
@@ -108,7 +101,6 @@
     - "'powerlevel10k' in item.theme"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ohmyzsh
 
 # Post setup
 - name: '[users] Set zsh as default shell'
@@ -116,7 +108,6 @@
   when: "item.state is not defined or 'present'in item.state"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ohmyzsh
 
 - name: '[users] Set bash as default shell for uninstalled users'
   ansible.builtin.user: name={{ item.user }} shell=/bin/bash
@@ -125,4 +116,3 @@
     - "'absent' in item.state"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ohmyzsh
