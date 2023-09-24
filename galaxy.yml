@@ -1,6 +1,6 @@
 namespace: drew1kun
 name: shellfreak
-version: 1.1.5
+version: 1.1.6
 readme: README.md
 authors:
 - Andrew Shagayev <drew-kun@protonmail.com>
@@ -33,4 +33,5 @@ issues: https://github.com/drew1kun/ansible-collection-shellfreak/issues
 
 build_ignore:
 - '*.tar.gz'
+- 'signatures'
 - 'galaxy-publish.yml'
