@@ -51,42 +51,27 @@ OS-Agnostic:
 | `mpd_autostart` | Start mpd automatically | `yes` |
 | `mpd_install_mpc` | Install mpc cli client | `yes` |
 | `mpd_install_ncmpcpp` | Install ncmpcpp or not | `yes` |
-| `mpd_ncmpcpp_users[]` | List of ncmpcpp users | `[drew, root]` |
-| `mpd_ncmpcpp_mpd_host` | MPD host set in ncmpcpp configuration | `localhost` |
+| `mpd_users[]` | List of ncmpcpp users | `[drew, root]` |
 | `mpd_port` | Port mpd will run on | `6600` |
-| `mpd_bind_to_address` | IP address on which mpd will listen | `any` |
-| `mpd_name` | MPD name |`Music Player Daemon` |
-| `mpd_restore_paused` | | `yes` |
-| `mpd_auto_update` | | `yes` |
-| `mpd_follow_inside_symlinks` | | `yes` |
-| `mpd_follow_outside_symlinks` | | `no` |
+| `mpd_bind_to_address` | IP address on which mpd will listen | <ul><li>Darwin: `~/.mpd/socket` </li><li>Linux: `/var/lib/mpd/socket`</li> see [`defaults/main.yml`](defaults/main.yml)</li></ul> |
+| `mpd_config_base` | MPD Configuration, except the audio_outputs | <ul>see [`defaults/main.yml`](defaults/main.yml)</ul> |
 
 OS-Specific (Mac and Linux):
 
-| Variables | Description | Default|
-|-----------|-------------|--------|
-| `mpd_music_dir` | MPD music directory (set in mpd.conf) | <ul><li>Darwin: `/Volumes/music`</li><li>Debian: `/var/lib/mpd/music`</li></ul> |
-| `mpd_playlist_dir` | Playlist directory (set in mpd.conf) | <ul><li>Darwin: `/Volumes/music/playlists`</li><li>Debian: `/var/lib/mpd/playlists`</li></ul> |
-| `mpd_db_file` | MPD database file (set in mpd.conf) | <ul><li>Darwin: `~/.mpd/mpd.db`</li><li>Debian: `/var/lib/mpd/mpd.db`</li></ul> |
-| `mpd_sticker_file` | sticker file (set in mpd.conf) | <ul><li>Darwin: `~/.mpd/sticker.db`</li><li>Debian: `/var/lib/mpd/sticker.db`</li></ul> |
-| `mpd_log_file` | log file (set in mpd.conf) | <ul><li>Darwin: `~/.mpd/mpd.log`</li><li>Debian: `syslog`</li></ul> |
-| `mpd_pid_file` | PID file (set in mpd.conf) | <ul><li>Darwin: `~/.mpd/mpd.pid`</li><li>Debian: None</li></ul> |
-| `mpd_state_file` | state file (set in mpd.conf) | <ul><li>Darwin: `~/.mpd/mpdstate`</li><li>Debian: `/var/lib/mpd/mpdstate`</li></ul> |
-| `mpd_user` | mpd user (set in mpd.conf) | <ul><li>Darwin: `{{ ansible_user_id }}`</li><li>Debian: `mpd`</li></ul> |
-| `mpd_outputs[]` | list of output configurations for mpd.conf | <ul><li>Darwin: see [`vars/Darwin.yml`](vars/Darwin.yml)</li><li>Debian: see [`vars/Debian.yml`](vars/Debian.yml)</li></ul> |
-
-MacOS-Specific:
 
 | Variables | Description | Default|
 |-----------|-------------|--------|
-| `mpd_osx_install_options[]` | List of homebrew installation options form MPD | see [`vars/Darwin.yml`](vars/Darwin.yml) |
-| `mpd_osx_ncmpcpp_install_options[]` | List of homebrew installation options for NCMPCPP | see [`vars/Darwin.yml`](vars/Darwin.yml) |
+| `mpd_config_outputs_linux[]` | list of audio_outputs for Linux | <ul> `ALSA` see [`defaults/main.yml`](defaults/main.yml)</ul> |
+| `mpd_config_outputs_macos[]` | list of audio_outputs for MacOS | <ul> `OSX (CoreAudio)` see [`defaults/main.yml`](defaults/main.yml)</ul> |
+| `mpd_config_outputs_common[]` | list of OS-agnostic audio_outputs | <ul> `FIFO, HTTP` see [`defaults/main.yml`](defaults/main.yml)</ul> |
 
-Debian-Specific:
+
+Firewalld-Specific:
 
 | Variables | Description | Default|
 |-----------|-------------|--------|
-| `mpd_firewall_zones` | Open MPD port only for the list of these firewalld zones | `[ public ]` |
+| `mpd_firewalld` | Configure firewalld to allow incoming connections to MPD | `true` |
+| `mpd_firewalld_zones` | Open MPD port only for the list of these firewalld zones | `[ public ]` |
 
 Dependencies
 ----

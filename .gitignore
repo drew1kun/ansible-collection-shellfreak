@@ -9,3 +9,4 @@ collections
 *.retry
 test/results
 galaxy-publish.yml
+galaxy-publish-ci.yml

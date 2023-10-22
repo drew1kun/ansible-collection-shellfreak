@@ -1,11 +1,11 @@
 #=============================== MPD =================================
-mpd_music_dir = "{{ mpd_music_dir }}"
 mpd_connection_timeout = "5"
 mpd_crossfade_time = "5"
-mpd_host = "{{ mpd_ncmpcpp_mpd_host }}"
+mpd_host = "{{'localhost' if 'any' in mpd_bind_to_address or mpd_bind_to_address=='0.0.0.0' else mpd_bind_to_address}}"
+{# port is being ignored if using unix-socket only #}
 mpd_port = "{{ mpd_port }}"
 #=====================================================================
-{%raw%}
+{% raw %}
 #============================= Behavior ==============================
 allow_for_physical_item_deletion = "yes"
 autocenter_mode = "yes"
@@ -55,8 +55,20 @@ lines_scrolled = "2"
 #=====================================================================
 
 #=========================== Visualizer ==============================
+{% endraw %}
+{%
+    set mpd_config_outputs =
+    mpd_config_outputs_common + (
+    mpd_config_outputs_linux if 'Linux' in ansible_system else
+    mpd_config_outputs_macos )
+%}
+visualizer_data_source = "{{
+                            (mpd_config_outputs
+                            | selectattr('path', 'defined')
+                            | list
+                            | items2dict(key_name='type', value_name='path')).fifo
+                          }}" {% raw %}
 visualizer_in_stereo = "yes"
-visualizer_data_source = "/tmp/mpd.fifo"
 visualizer_output_name = "FIFO"
 visualizer_type = "spectrum" (spectrum/wave)
 visualizer_color = "magenta,blue,cyan,green"
@@ -64,4 +76,4 @@ visualizer_look = "•┃"
 visualizer_autoscale = "yes"
 visualizer_spectrum_smooth_look = "yes"
 #=====================================================================
-{%endraw%}
+{% endraw %}
