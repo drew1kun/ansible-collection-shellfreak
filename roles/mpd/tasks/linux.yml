@@ -15,7 +15,6 @@
   register: mpd_result
   until: mpd_result is succeeded
   become: true
-  tags: mpd
 
 - name: '[linux] Install mpc package'
   action: >
@@ -24,9 +23,7 @@
   register: mpd_mpc_result
   until: mpd_mpc_result is succeeded
   when: mpd_install_mpc
-  tags:
-    - mpd
-    - mpc
+  tags: ['mpc']
 
 - name: '[linux] Install ncmpcpp package'
   action: >
@@ -35,9 +32,7 @@
   register: mpd_ncmpcpp_result
   until: mpd_ncmpcpp_result is succeeded
   when: mpd_install_ncmpcpp
-  tags:
-    - mpd
-    - ncmpcpp
+  tags: ['ncmpcpp']
 
 - name: '[linux] Enable and Start mpd service if needed'
   ansible.builtin.service:
@@ -45,7 +40,6 @@
     enabled: "{{ mpd_autostart }}"
     state: "{% if mpd_autostart %}started{% else %}stopped{% endif %}"
   become: true
-  tags: mpd
 
 - name: '[linux] Enable mpd socket if needed'
   ansible.builtin.service:
@@ -53,13 +47,11 @@
     enabled: "{% if mpd_autostart %}false{% else %}true{% endif %}"
     state: "{% if mpd_autostart %}stopped{% else %}started{% endif %}"
   become: true
-  tags: mpd
 
 - name: '[linux] Generate mpd.conf from template'
   ansible.builtin.template: src=mpd.conf.j2 dest=/etc/mpd.conf backup=true owner=root group=root mode=0644
   notify: Restart mpd service
   become: true
-  tags: mpd
 
 - name: '[linux] Create ~/.ncmpcpp folder for each mpd_user'
   ansible.builtin.file:
@@ -74,9 +66,7 @@
     - mpd_install_ncmpcpp
     - mpd_users is defined
     - mpd_users | length > 0
-  tags:
-    - mpd
-    - ncmpcpp
+  tags: ['ncmpcpp']
 
 - name: '[linux] Generate ncmpcpp config from template for each mpd_user'
   ansible.builtin.template:
@@ -91,9 +81,7 @@
     - mpd_install_ncmpcpp
     - mpd_users is defined
     - mpd_users | length > 0
-  tags:
-    - mpd
-    - ncmpcpp
+  tags: ['ncmpcpp']
 
 - name: '[linux] Check firewalld stats'
   ansible.builtin.stat: path="{{ item }}"
@@ -102,15 +90,21 @@
   loop:
     - /usr/sbin/firewalld
     - /sbin/firewalld
-  tags: mpd
+  when: mpd_firewalld|default(false)|bool == true
 
 - name: '[linux] Open mpd port in firewall'
-  ansible.posix.firewalld: port="{{ mpd_port }}/tcp" zone="{{ item }}" permanent=true immediate=true state=enabled
-  loop: "{{ mpd_firewall_zones }}"
+  ansible.posix.firewalld:
+    port: "{{ mpd_port }}/tcp"
+    zone: "{{ item }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop: "{{ mpd_firewalld_zones }}"
   become: true
-  when: mpd_stat_firewalld.results[0].stat.exists
-        or
-        mpd_stat_firewalld.results[1].stat.exists
+  when:
+    - mpd_firewalld|default(false)|bool == true
+    - mpd_stat_firewalld.results[0].stat.exists
+      or
+      mpd_stat_firewalld.results[1].stat.exists
   vars:
     ansible_python_interpreter: '/usr/bin/python3'  # Fix the "Python Module not found.." Error
-  tags: mpd
