@@ -4,38 +4,76 @@
 mpd_autostart: true
 mpd_install_mpc: true
 mpd_install_ncmpcpp: true
-mpd_ncmpcpp_mpd_host: localhost
-
-# ATTENTION!
-# OS-Specific variables can be found in vars/ directory of this role
-#
-mpd_port: 6600
-mpd_bind_to_address: any
-mpd_name: Music Player Daemon
-mpd_restore_paused: true
-mpd_auto_update: true
-mpd_follow_inside_symlinks: true
-mpd_follow_outside_symlinks: false
 mpd_users:
   - "{{ ansible_user_id }}"
   - root
 
-# Add your OS-Specific outputs here depending on your hardware drivers:
-#
-mpd_outputs:
-  - name: "FIFO_Visualizer"
-    type: "fifo"
-    path: "/tmp/mpd.fifo"
+# open port in firewalld if not using socket;
+# NOTE! Tip: reuse it in mpd_config_base variable if needed.
+mpd_port: 6600
+mpd_firewalld_zones: ['public']
+mpd_firewalld: true
+
+# NOTE: 'mpd_bind_to_address' var is used in both mpd/config AND .ncmpcpp/config.
+# Additional values for 'bind_to_address' config can be added directly in 'mpd_config_base'.
+# Can be an IP, hostname (e.g.: localhost etc.), 'any' (all IP interfaces) or Unix-socket filename (default):
+mpd_bind_to_address: >
+  {{
+    '/var/lib/mpd/socket' if 'Linux' in ansible_system else
+    '~/.mpd/socket'
+  }}
+
+# NOTE: All MPD configuration goes here EXCEPT audio_outputs
+mpd_config_base: |
+  music_directory     "{{ '/var/lib/mpd/music' if 'Linux' in ansible_system else '~/Music/music_library' }}"
+  playlist_directory  "{{ '/var/lib/mpd/playlists' if 'Linux' in ansible_system else '~/Music/playlists' }}"
+  database {
+      plugin          "simple"
+      path            "{{ '/var/lib/mpd/mpd.db' if 'Linux' in ansible_system else '~/.mpd/mpd.db' }}"
+      cache_directory "{{ '/var/lib/mpd/cache' if 'Linux' in ansible_system else '~/.mpd/cache' }}"
+  }
+  sticker_file        "{{ '/var/lib/mpd/sticker.db' if 'Linux'in ansible_system else '~/.mpd/sticker.db' }}"
+  state_file          "{{ '/var/lib/mpd/mpdstate' if 'Linux'in ansible_system else '~/.mpd/mpdstate' }}"
+  pid_file            "{{ '/var/lib/mpd/mpd.pid' if 'Linux'in ansible_system else '~/.mpd/mpd.pid' }}"  # Enables 'mpd --kill' cmd
+  log_file            "{{ 'syslog' if 'Linux'in ansible_system else '~/.mpd/mpd.log' }}"
+  user                "{{ 'mpd' if 'Linux'in ansible_system else ansible_user_id }}"
+  bind_to_address     "any"
+  bind_to_address     "{{ mpd_bind_to_address }}" # use unix-socket ain addition
+  port                "{{ mpd_port }}"
+  restore_paused      "yes"
+  auto_update         "yes"
+  zeroconf_enabled    "yes"
+  zeroconf_name       "MPD"
+
+# NOTE: Configure audio_outputs here:
+mpd_config_outputs_linux:
+  - name: "ALSA"
+    type: "alsa"
+    device: "hw:0,0"
     format: "44100:16:2"
-  - name: MyRadio
-    type: httpd
-    port: 8080
-    encoder: lame
+    mixer_device: "default"
+    mixer_control: "PCM"
+    mixer_index: "0"
+
+mpd_config_outputs_macos:
+  - name: CoreAudio
+    type: osx
+    mixer_type: software
+
+mpd_config_outputs_common:
+  - name: 'FIFO_Visualizer'
+    type: 'fifo'
+    path: '/tmp/mpd.fifo'
+    format: '44100:16:2'
+  - name: 'HTTP_Radio'
+    type: 'httpd'
+    port: '8080'
+    encoder: 'lame'
     always_on: 'yes'
-    replay_gain_handler: software
-    replaygain: track
-    replaygain_preamp: 0
+    replay_gain_handler: 'software'
+    replaygain: 'track'
+    replaygain_preamp: '0'
     volume_normalization: 'yes'
     tags: 'yes'
-    bitrate: 64
-    format: 22050:16:1
+    bitrate: '64'
+    format: '22050:16:1'
