@@ -21,7 +21,7 @@ One of the following OS (or deriviatives):
 For MacOS:
 if Homebrew is not installed on the managed host, install [geerlingguy.mac][geerlingguy-mac] collection via galaxy:
 
-```
+```bash
 ansible-galaxy collection install geerlingguy.mac.homebrew
 ```
 
@@ -29,7 +29,7 @@ And include homebrew role in the playbook:
 
 ```yaml
 roles:
-- geerlingguy.mac.homebrew
+  - geerlingguy.mac.homebrew
 ```
 
 Role Variables
@@ -66,11 +66,11 @@ Play:
 - hosts: dev_workstation_macos
   gather_facts: yes
   collections:
-  - geerlingguy.mac
-  - drew1kun.shellfreak
+    - geerlingguy.mac
+    - drew1kun.shellfreak
   roles:
-  - homebrew
-  - tmux
+    - homebrew
+    - tmux
 ```
 
 License

@@ -6,7 +6,6 @@
   register: vim_neovim_install_result
   until: vim_neovim_install_result is succeeded
   when: "'Darwin' in ansible_system"
-  tags: vim
 
 - name: '[nvim] Install neovim on non-Darwin systems'
   ansible.builtin.package:
@@ -15,7 +14,6 @@
   register: vim_neovim_install_result
   until: vim_neovim_install_result is succeeded
   when: "not 'Darwin' in ansible_system"
-  tags: vim
 
 - name: '[nvim] Create neovim configuration by symlinking the existing vim config'
   ansible.builtin.file:
@@ -30,8 +28,7 @@
     # - {src: '~/.vim', dest: '~/.config/nvim'}
     # - {src: '~/.vimrc', dest: '~/.vim/init.vim'}
   when: "'user' in vim_env"
-  tags: vim
 
 - name: '[nvim] Install pynvim python package for nvim to support python'
   ansible.builtin.pip:
-    name: pynvim
+    name: ['pynvim']
