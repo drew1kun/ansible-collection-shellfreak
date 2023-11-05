@@ -1,16 +1,16 @@
+---
 - name: '[config] Find bash binary for correct shell tmux version check'
   ansible.builtin.command: which bash
   register: tmux_bash_bin
   changed_when: false
-  tags: tmux
 
 - name: '[config] Check the tmux version'
-  ansible.builtin.shell: set -o pipefail && tmux -V | tr -d '[A-Z][a-z][ ]'
+  # set -o pipefail && tmux -V | ... - not required anymore
+  ansible.builtin.shell: tmux -V | tr -d '[A-Z][a-z][ ]'
   args:
     executable: "{{ tmux_bash_bin.stdout }}"
   register: tmux_version
   changed_when: false
-  tags: tmux
 
 - name: '[config] Generate tmux custom configuration'
   ansible.builtin.template:
@@ -18,8 +18,11 @@
     dest: "{{ tmux_root_dir if item == 'root' else tmux_home_dir ~ item }}/.tmux.conf"
     mode: 0644
     owner: "{{ item }}"
-    group: "{{ item if 'Darwin' not in ansible_os_family else 'wheel' if item == 'root' else 'staff' }}"
+    group: >-
+      {{
+        item if 'Darwin' not in ansible_os_family else
+        'wheel' if item == 'root' else 'staff'
+      }}
   when: "item.state is not defined or 'present'in item.state"
   loop: "{{ tmux_users|flatten(levels=1) }}"
   become: true
-  tags: tmux

@@ -4,14 +4,12 @@
   register: vim_install_result
   until: vim_install_result is succeeded
   become: true
-  tags: vim
 
 - name: '[non-darwin] Make sure vim-nox is installed'
   ansible.builtin.package: name=vim-nox state=present
   register: vim_remove_result
   until: vim_remove_result is succeeded
   become: true
-  tags: vim
 
 # Analog of 'update-alternatives --set editor /usr/bin/vim.nox'
 - name: '[non-darwin] Setting vim default editor for visudo'
@@ -19,4 +17,3 @@
     name: editor
     path: /usr/bin/vim.nox
   become: true
-  tags: vim

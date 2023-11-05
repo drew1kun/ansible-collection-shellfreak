@@ -2,17 +2,14 @@
 - name: "[system] Generating /etc/vim/vimrc from template"
   ansible.builtin.template: src=vimrc.j2 dest="{{ vim_root_config }}" owner=root group=root mode=0644
   become: true
-  tags: vim
 
 - name: "[system] Generating /etc/vim/vimrc.local from template"
   ansible.builtin.template: src=vimrc.local.j2 dest="{{ vim_root_local_config }}" owner=root group=root mode=0644
   become: true
-  tags: vim
 
 - name: "[system] Generating /etc/vim/{{ vim_pm_config }} from template"
   ansible.builtin.template: src="{{ vim_pm_config }}.j2" dest="{{ vim_root_plugins }}" owner=root group=root mode=0644
   become: true
-  tags: vim
 
 - name: "[system] Generating /etc/vim/vimrc.{{ plugin }} config files from templates"
   ansible.builtin.template:
@@ -24,19 +21,16 @@
   become: true
   loop: "{{ vim_plugins|product(vim_checklist)|list }}"
   when: "item.0.name in item.1.name"
-  tags: vim
 
 - name: "[system] Copying .vim folder to /var/lib/vim/addons/"
   ansible.builtin.copy: src=vim/ dest=/var/lib/vim/addons/ directory_mode=0755 mode=0644
   become: true
-  tags: vim
 
 # remove the old /root/.vim directory for idempotent plugin installation with vundle
 # needed for system-wide installation only
 - name: "[system] removing old /root/.vim directory if present"
   ansible.builtin.file: path=/root/.vim state=absent
   become: true
-  tags: vim
 
 - name: '[user] Download en.utf-8.spl spell file from ftp'
   ansible.builtin.get_url:
@@ -51,7 +45,6 @@
   when: vim_users is defined
   become: true
   become_user: "{{ item }}"
-  tags: vim
 
 - name: "[system] Setting EDITOR and TERM environment variables"
   ansible.builtin.blockinfile:
@@ -66,8 +59,6 @@
       export TERM="xterm-256color"  # For vim colors in tmux
     marker: "# {mark} ======== VIM role: Ansible managed block ========="
   become: true
-  tags: vim
 
 - name: "[system] Include {{ vim_plugin_manager }} plugin manager and plugins installation tasks"
   ansible.builtin.include_tasks: "{{ vim_plugin_manager }}.yml"
-  tags: vim

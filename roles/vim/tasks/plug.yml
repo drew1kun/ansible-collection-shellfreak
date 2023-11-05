@@ -4,7 +4,11 @@
     path: ~/.vim/autoload/
     state: directory
     owner: "{{ item }}"
-    group: "{{ item if not 'Darwin' in ansible_system else 'wheel' if item == 'root' else 'staff' }}"
+    group: >-
+      {{
+        item if not 'Darwin' in ansible_system else
+        'wheel' if item == 'root' else 'staff'
+      }}
     mode: 0755
   loop: "{{ vim_users }}"
   become: true
@@ -12,7 +16,6 @@
   when:
     - "'user' in vim_env"
     - vim_users is defined
-  tags: vim
 
 - name: '[plug] Ensure the installation directory exists system-wide'
   ansible.builtin.file:
@@ -23,14 +26,17 @@
     mode: 0755
   become: true
   when: "'system' in vim_env"
-  tags: vim
 
 - name: '[plug] Install Plug per user'
   ansible.builtin.get_url:
     url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     dest: ~/.vim/autoload/plug.vim
     owner: "{{ item }}"
-    group: "{{ item if not 'Darwin' in ansible_system else 'wheel' if item == 'root' else 'staff' }}"
+    group: >-
+      {{
+        item if not 'Darwin' in ansible_system else
+        'wheel' if item == 'root' else 'staff'
+      }}
     mode: 0644
   loop: "{{ vim_users }}"
   become: true
@@ -40,7 +46,6 @@
   when:
     - "'user' in vim_env"
     - vim_users is defined
-  tags: vim
 
 - name: '[plug] Install Plug system-wide'
   ansible.builtin.get_url:
@@ -53,7 +58,6 @@
   until: vim_plug_result is succeeded
   become: true
   when: "'system' in vim_env"
-  tags: vim
 
 # IF this task just hangs, this may be because of the following:
 #  - .vimrc or .vim files permissions (see 'which sudo' and become_method: su)
@@ -78,7 +82,6 @@
   when:
     - "'user' in vim_env"
     - vim_users is defined
-  tags: vim
 
 - name: '[plug] Downloading plugins using Plug system-wide'
   ansible.builtin.command: 'vim -E -s -c "source /etc/vim/vimrc" -c PlugInstall -c qa'
@@ -86,4 +89,3 @@
   register: vim_plugins_result
   failed_when: vim_plugins_result.rc > 1
   when: "'system' in vim_env"
-  tags: vim

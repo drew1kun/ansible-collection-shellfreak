@@ -13,9 +13,6 @@
   register: vim_dep_result
   until: vim_dep_result is succeeded
   when: "not 'Darwin' in ansible_system"
-  tags:
-    - vim
-    - vim_dependencies
 
 - name: '[dependencies] MacOS: Install git, ag, ripgrep'
   community.general.homebrew:
@@ -29,6 +26,3 @@
   register: vim_dep_result
   until: vim_dep_result is succeeded
   when: "'Darwin' in ansible_system"
-  tags:
-    - vim
-    - vim_dependencies
