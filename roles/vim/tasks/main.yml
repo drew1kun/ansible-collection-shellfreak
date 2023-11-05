@@ -17,12 +17,18 @@
     - vim_dependencies
 
 - name: "[main] Include Darwin-specific tasks if provisioning MacOS"
-  ansible.builtin.include_tasks: darwin.yml
+  ansible.builtin.include_tasks:
+    file: darwin.yml
+    apply:
+      tags: vim
   when: "'Darwin' in ansible_system"
   tags: vim
 
 - name: "[main] Include vim installation tasks"
-  ansible.builtin.include_tasks: linux.yml
+  ansible.builtin.include_tasks:
+    file: linux.yml
+    apply:
+      tags: vim
   when: "not 'Darwin' in ansible_system"
   tags: vim
 
@@ -31,24 +37,36 @@
   tags: vim
 
 - name: "[main] Include system configuration tasks"
-  ansible.builtin.include_tasks: system.yml
+  ansible.builtin.include_tasks:
+    file: system.yml
+    apply:
+      tags: vim
   when:
     - "'system' in vim_env"
     - "not 'Darwin' in ansible_system"
   tags: vim
 
 - name: "[main] Include user configuration tasks"
-  ansible.builtin.include_tasks: users.yml
+  ansible.builtin.include_tasks:
+    file: users.yml
+    apply:
+      tags: vim
   when: "'user' in vim_env or 'Darwin' in ansible_system"
   tags: vim
 
 - name: "[main] Include vim-airline configuration if installing airline"
-  ansible.builtin.include_tasks: airline.yml
+  ansible.builtin.include_tasks:
+    file: airline.yml
+    apply:
+      tags: vim
   loop: "{{ vim_plugins|flatten(levels=1) }}"
   when: item.name == 'vim-airline/vim-airline'
   tags: vim
 
 - name: "[main] Include neovim installation tasks"
-  ansible.builtin.include_tasks: nvim.yml
+  ansible.builtin.include_tasks:
+    file: nvim.yml
+    apply:
+      tags: vim
   when: vim_neovim
   tags: vim

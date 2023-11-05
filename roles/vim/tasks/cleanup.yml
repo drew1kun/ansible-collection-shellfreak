@@ -9,17 +9,11 @@
     hidden: true
   register: sys_vim_cfg_files
   become: true
-  tags:
-    - vim
-    - vim_cleanup
 
 - name: '[cleanup] Removing old vim configuration from /etc/vim/ and /root/'
   ansible.builtin.file: path="{{ item.path }}" state=absent
   become: true
   loop: "{{ sys_vim_cfg_files.files }}"
-  tags:
-    - vim
-    - vim_cleanup
 
 - name: '[cleanup] Finding old vim configs in ~/ for all users'
   ansible.builtin.find: file_type=any paths=~/ patterns='.vim*' hidden=true
@@ -30,9 +24,6 @@
   when:
     - vim_users is defined
     - "'user' in vim_env"
-  tags:
-    - vim
-    - vim_cleanup
 
 # https://stackoverflow.com/questions/46516649/\
 #   ansible-register-find-module-return-values-in-a-loop-and-extract-the-path-prop
@@ -40,10 +31,13 @@
   ansible.builtin.file: path="{{ item }}" state=absent
   become: true
   # FLATTENING THE EXISTING DICTIONARY AND TURNING IT TO A LIST OF FILE PATHS:
-  loop: "{{ user_vim_cfg_files.results | sum(attribute='files', start=[]) | map(attribute='path') | list }}"
+  loop: >-
+    {{
+      user_vim_cfg_files.results
+      | sum(attribute='files', start=[])
+      | map(attribute='path')
+      | list
+    }}
   when:
     - vim_users is defined
     - "'user' in vim_env"
-  tags:
-    - vim
-    - vim_cleanup

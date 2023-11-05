@@ -12,7 +12,6 @@
   when:
     - "'user' in vim_env"
     - vim_users is defined
-  tags: vim
 
 - name: '[vundle] Installing Vundle'
   ansible.builtin.git:
@@ -23,7 +22,6 @@
   register: vim_vundle_result
   until: vim_vundle_result is succeeded
   when: "'system' in vim_env"
-  tags: vim
 
 # IF this task just hangs, this may be because of the following:
 #  - .vimrc or .vim files permissions (see 'which sudo' and become_method: su)
@@ -48,10 +46,8 @@
   when:
     - "'user' in vim_env"
     - vim_users is defined
-  tags: vim
 
 - name: '[vundle] Downloading plugins using Vundle system-wide'
   ansible.builtin.command: 'vim -E -s -c "source /etc/vim/vimrc" -c PluginInstall -c qa'
   become: true
   when: "'system' in vim_env"
-  tags: vim

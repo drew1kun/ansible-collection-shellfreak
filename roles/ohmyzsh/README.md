@@ -26,6 +26,7 @@ Requirements
 **NOTE:** Role requires Fact Gathering by ansible!
 
 One of the following OS (or deriviatives):
+
  - Debian | Ubuntu
  - MacOS (with [Homebrew][homebrew])
 
@@ -40,7 +41,7 @@ And include homebrew role in the playbook:
 
 ```yaml
 roles:
-- geerlingguy.mac.homebrew
+  - geerlingguy.mac.homebrew
 ```
 
 Role Variables
@@ -86,11 +87,11 @@ Play:
 - hosts: dev_clients_macos
   gather_facts: yes
   collections:
-  - geerlingguy.mac
-  - drew1kun.shellfreak
+    - geerlingguy.mac
+    - drew1kun.shellfreak
   roles:
-  - homebrew
-  - ohmyzsh
+    - homebrew
+    - ohmyzsh
 ```
 
 License

@@ -14,7 +14,6 @@
   become: true
   become_user: "{{ vim_airline_user }}"
   when: "'user' in vim_env"
-  tags: vim
 
 - name: '[airline] install custom vim-airline themes system-wide'
   ansible.builtin.copy:
@@ -27,4 +26,3 @@
     mode: 0644
   become: true
   when: "'system' in vim_env"
-  tags: vim

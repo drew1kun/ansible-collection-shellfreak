@@ -63,6 +63,7 @@ Requirements
 Ansible  1.9 or greater
 
 **NOTE:** If 'Down' task just hangs forever, this may be because of the following:
+
  - .vimrc or .vim files permissions (see 'which sudo' and become_method: su)
  - errors in .vimrc
  - misspelled plugin names: PlugInstall(or PluginInstall) triggers git, the "wish" GUI dialog for OpenSSH appears.
@@ -101,17 +102,17 @@ Play:
 - hosts: macbooks
   gather_facts: yes
   collections:
-  - drew1kun.shellfreak
+    - drew1kun.shellfreak
   roles:
-  - role: vim
-    vim_cleanup: yes
-    vim_env: users
-    vim_plugin_manager: plug
-    vim_emoji_git_integration: no
-    vim_neovim: yes
-    vim_users: "{{ vim_vault_users }}"
-    vim_colorscheme: nord
-    vim_plugins: "{{ vim_github_plugins + vim_asyncomplete_plugins }}"
+    - role: vim
+      vim_cleanup: yes
+      vim_env: users
+      vim_plugin_manager: plug
+      vim_emoji_git_integration: no
+      vim_neovim: yes
+      vim_users: "{{ vim_vault_users }}"
+      vim_colorscheme: nord
+      vim_plugins: "{{ vim_github_plugins + vim_asyncomplete_plugins }}"
 ```
 
 License

@@ -6,4 +6,3 @@
   become: true
   register: tmux_install
   until: tmux_install is succeeded
-  tags: tmux

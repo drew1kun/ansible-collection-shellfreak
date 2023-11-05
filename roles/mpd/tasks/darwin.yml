@@ -1,14 +1,4 @@
 ---
-# To do something only if some distro installed on the host
-# Even specific distro version can be specified, see:
-# https://raymii.org/s/tutorials/Ansible_-_Only_if_on_specific_distribution_or_distribution_version.html
-# example:
-#     when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
-#
-# ansible_distribuion:  ['MacOSX', 'Debian', 'Ubuntu', 'CentOS', 'Red Hat Enterprise Linux',  'Windows 10']
-# ansible_os_family:    ['Darwin', 'Debian', 'Debian', 'RedHat', 'RedHat',                    'Windows']
-# ansible_system:       ['Darwin', 'Linux',  'Linux',  'Linux',  'Linux',                     'Windows']
-#
 - name: '[darwin] Install mpd with Homebrew'
   community.general.homebrew: name=mpd state=present
   register: mpd_result
