@@ -1,4 +1,7 @@
 #=============================== MPD =================================
+{% if not mpd_music_dir.startswith('http://') and not mpd_music_dir.startswith('smb://') %}
+mpd_music_dir = "{{ mpd_music_dir }}"
+{% endif %}
 mpd_connection_timeout = "5"
 mpd_crossfade_time = "5"
 mpd_host = "{{'localhost' if 'any' in mpd_bind_to_address or mpd_bind_to_address=='0.0.0.0' else mpd_bind_to_address}}"
