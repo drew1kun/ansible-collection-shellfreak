@@ -1,14 +1,9 @@
 ---
-- name: '[config] Find bash binary for correct shell tmux version check'
-  ansible.builtin.command: which bash
-  register: tmux_bash_bin
-  changed_when: false
-
 - name: '[config] Check the tmux version'
   # set -o pipefail && tmux -V | ... - not required anymore
   ansible.builtin.shell: tmux -V | tr -d '[A-Z][a-z][ ]'
-  args:
-    executable: "{{ tmux_bash_bin.stdout }}"
+  environment:
+    PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_facts.env.PATH }}"
   register: tmux_version
   changed_when: false
 
