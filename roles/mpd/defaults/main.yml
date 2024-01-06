@@ -16,16 +16,29 @@ mpd_firewalld: true
 
 # NOTE: 'mpd_bind_to_address' var is used in both mpd/config AND .ncmpcpp/config.
 # Additional values for 'bind_to_address' config can be added directly in 'mpd_config_base'.
-# Can be an IP, hostname (e.g.: localhost etc.), 'any' (all IP interfaces) or Unix-socket filename (default):
-mpd_bind_to_address: >
+# Can be an IP, hostname (e.g.: localhost etc.), 'any' (all IP interfaces) or Unix-socket filename (default)
+# Unix Socket is preferred for Ncmpcpp local filesystem browsing feature
+mpd_bind_to_address: >-
   {{
     '/var/lib/mpd/socket' if 'Linux' in ansible_system else
     '~/.mpd/socket'
   }}
 
+# used in both mpd/config and .ncmpcpp/config template:
+# if it's a satellite server using http or smb remote dir,
+# then this var WILL NOT BE SET in .ncmpcpp/config template
+mpd_music_dir: >-
+  {{
+    '/var/lib/mpd/music' if 'Linux' in ansible_system else
+    '~/Music/music_library'
+  }}
+
 # NOTE: All MPD configuration goes here EXCEPT audio_outputs
 mpd_config_base: |
-  music_directory     "{{ '/var/lib/mpd/music' if 'Linux' in ansible_system else '~/Music/music_library' }}"
+  music_directory     "{{ mpd_music_dir }}"
+  # playlists_directory currently cannot be used as a remote share in satellite setup,
+  # the way music_directory can be used, and has to be local only. The issue is open:
+  # https://github.com/MusicPlayerDaemon/MPD/issues/848
   playlist_directory  "{{ '/var/lib/mpd/playlists' if 'Linux' in ansible_system else '~/Music/playlists' }}"
   database {
       plugin          "simple"
@@ -38,7 +51,7 @@ mpd_config_base: |
   log_file            "{{ 'syslog' if 'Linux'in ansible_system else '~/.mpd/mpd.log' }}"
   user                "{{ 'mpd' if 'Linux'in ansible_system else ansible_user_id }}"
   bind_to_address     "any"
-  bind_to_address     "{{ mpd_bind_to_address }}" # use unix-socket ain addition
+  bind_to_address     "{{ mpd_bind_to_address }}" # Enables local filesystem browsing
   port                "{{ mpd_port }}"
   restore_paused      "yes"
   auto_update         "yes"
@@ -47,24 +60,26 @@ mpd_config_base: |
 
 # NOTE: Configure audio_outputs here:
 mpd_config_outputs_linux:
-  - name: "ALSA"
-    type: "alsa"
-    device: "hw:0,0"
-    format: "44100:16:2"
-    mixer_device: "default"
-    mixer_control: "PCM"
-    mixer_index: "0"
+  - name: 'ALSA'
+    type: 'alsa'
+    device: 'hw:0,0'
+    format: '44100:16:2'
+    mixer_device: 'default'
+    mixer_control: 'PCM'
+    mixer_index: '0'
 
 mpd_config_outputs_macos:
-  - name: CoreAudio
-    type: osx
-    mixer_type: software
+  - name: 'CoreAudio'
+    type: 'osx'
+    mixer_type: 'disabled'  # | software
+    dop: 'yes'
 
 mpd_config_outputs_common:
   - name: 'FIFO_Visualizer'
     type: 'fifo'
     path: '/tmp/mpd.fifo'
     format: '44100:16:2'
+    mixer_type: software
   - name: 'HTTP_Radio'
     type: 'httpd'
     port: '8080'
