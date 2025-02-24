@@ -86,6 +86,7 @@
     - "vim_users is defined"
     - "item.1.name in item.2.name"
 
+# This task causes idempotency issue
 - name: '[users] Copying .vim folder to ~/.vim'
   ansible.builtin.copy:
     src: vim/
@@ -98,26 +99,6 @@
       }}
     directory_mode: 0755
     mode: 0644
-  loop: "{{ vim_users }}"
-  when: vim_users is defined
-  become: true
-  become_user: "{{ item }}"
-# ^
-# These two tasks cause idempotency issue
-# >
-- name: '[users] Download en.utf-8.spl spell file from ftp'
-  ansible.builtin.get_url:
-    url: ftp://ftp.vim.org/pub/vim/runtime/spell/en.utf-8.spl
-    dest: ~/.vim/spell/en.utf-8.spl
-    owner: "{{ item }}"
-    group: >-
-      {{
-        item if not 'Darwin' in ansible_system else
-        'wheel' if item == 'root' else 'staff'
-      }}
-    mode: 0644
-  register: vim_spell_result
-  until: vim_spell_result is succeeded
   loop: "{{ vim_users }}"
   when: vim_users is defined
   become: true
