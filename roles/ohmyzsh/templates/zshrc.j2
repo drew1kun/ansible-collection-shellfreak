@@ -2,7 +2,7 @@
 
 {% if ohmyzsh_setup_tmux|default(false) %}
 # Automatically start tmux when starting new shell
-{% if 'tmux' in (ohmyzsh_default_plugins|default|list + item.plugins|default|list) %}
+{% if 'tmux' in (ohmyzsh_default_plugins|default([])|map(attribute='name')|list + item.plugins|default([])|list) %}
 ZSH_TMUX_AUTOSTART=false  # true - will start tmux automatically ATTACHED TO CURRENT SESSION!
 {% endif %}
 if [ "${TMUX}" = "" ]; then tmux; fi
@@ -31,22 +31,28 @@ export TERM="xterm-256color"
 # Optionally, if you set this to "random", it'll load a random theme each
 # time that oh-my-zsh is loaded.
 # ZSH_THEME="random"
-ZSH_THEME="{{ item.theme if
-  (item.theme is defined
-  and 'powerlevel9k/powerlevel9k' in item.theme
-  and ohmyzsh_powerlevel9k|default(false)) or
-  (item.theme is defined
-  and 'powerlevel10k/powerlevel10k' in item.theme
-  and ohmyzsh_powerlevel10k|default(false))
-  else ohmyzsh_default_theme }}"
 
-{% if ohmyzsh_powerlevel9k|default(false) %}
+ZSH_THEME="{{
+  item.theme
+  if item.theme is defined and (
+    ('powerlevel9k/powerlevel9k' in item.theme and
+     (ohmyzsh_themes | selectattr('name', 'equalto', 'powerlevel9k') | map(attribute='install') | list | first | default(false)))
+    or
+    ('powerlevel10k/powerlevel10k' in item.theme and
+     (ohmyzsh_themes | selectattr('name', 'equalto', 'powerlevel10k') | map(attribute='install') | list | first | default(false)))
+  )
+  else ohmyzsh_default_theme
+}}"
+
+{% if (ohmyzsh_themes | selectattr('name', 'equalto', 'powerlevel9k')
+  | map(attribute='install') | list | first | default(false)) %}
 {% if item.theme is defined and item.theme == 'powerlevel9k/powerlevel9k' %}
 source "{{ ohmyzsh_powerlevel9k_cfg }}"
 
 {% endif %}
 {% endif %}
-{% if ohmyzsh_powerlevel10k|default(true) %}
+{% if (ohmyzsh_themes | selectattr('name', 'equalto', 'powerlevel10k')
+  | map(attribute='install') | list | first | default(false)) %}
 {% if item.theme is defined and item.theme == 'powerlevel10k/powerlevel10k' %}
 # Source the existing p10k config (if it exists)
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
@@ -83,16 +89,16 @@ zstyle :omz:plugins:ssh-agent identities {{ item.ssh_ids|join(' ') }}
 # Example format:count plugins=(rails git textmate ruby lighthouse)
 {% if ohmyzsh_default_plugins is defined or (item is defined and item.plugins is defined) %}
 default_plugins=(
-{% for plugin in (ohmyzsh_default_plugins|default|list + item.plugins|default|list) %}
-    {{ plugin }}
+{% for plugin in (ohmyzsh_default_plugins | default([]) + item.plugins | default([])) %}
+    {{ plugin.name }}
 {% endfor %}
 )
 
 {% endif %}
 {% if ohmyzsh_custom_plugins is defined %}
 custom_plugins=(
-{% for plugin in ohmyzsh_custom_plugins|list %}
-    {{ plugin }}
+{% for plugin in ohmyzsh_custom_plugins if plugin.install | default(true) %}
+    {{ plugin.name }}
 {% endfor %}
 )
 
@@ -106,7 +112,10 @@ else
     plugins=${default_plugins}
 fi
 
-{% if 'zsh-syntax-highlighting' in ohmyzsh_custom_plugins|default|list %}
+{% set all_custom_plugins = ohmyzsh_custom_plugins | selectattr("install", "equalto", true) | list %}
+{% set all_custom_plugin_names = all_custom_plugins | map(attribute='name') | list %}
+
+{% if 'zsh-syntax-highlighting' in all_custom_plugin_names %}
 # Make zsh look like fish:
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=white'
 {% endif %}
@@ -116,7 +125,8 @@ if (( ! ${fpath[(I)/usr/local/share/zsh/site-functions]} )); then
 fi
 
 source "${ZSH}/oh-my-zsh.sh"
-{% if 'kubectl' in (ohmyzsh_default_plugins|default|list + item.plugins|default|list) %}
+{% set all_plugins = (ohmyzsh_default_plugins | default([]) + item.plugins | default([])) %}
+{% if 'kubectl' in all_plugins | map(attribute='name') | list %}
 source <(kubectl completion zsh)
 {% endif %}
 
@@ -136,6 +146,7 @@ export EDITOR=vim visudo
 export SHELL="{{ (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='stdout')).zsh }}"
 export LC_TYPE="en_US.UTF-8"
 export LANG="en_US.UTF-8"
+export DISPLAY=:0   # for X11 Forwarding (XQuartz utility on mac) to work with iTerm2
 
 # Load aliases
 if [ -f "${HOME}/.zsh/aliases" ]; then
@@ -159,14 +170,22 @@ fi
 # Source fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-{% if 'terraform' in (ohmyzsh_default_plugins|default|list + item.plugins|default|list) %}
+{% set all_plugins = (ohmyzsh_default_plugins | default([]) + item.plugins | default([])) | map(attribute='name') | list %}
+{% if 'terraform' in all_plugins %}
 # Added with `terraform -install-autocomplete` command.
 # If terraform autocompletions do not work, remove these lines and reissue the command
-{% if (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='rc')).terraform|int > 0 %}
+{% set binaries_rc = ohmyzsh_binaries.results | items2dict(key_name='item', value_name='rc') %}
+{% set binaries_stdout = ohmyzsh_binaries.results | items2dict(key_name='item', value_name='stdout') %}
+{% if binaries_rc.terraform | int > 0 %}
 #autoload -U +X bashcompinit && bashcompinit
-#complete -o nospace -C {{ (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='stdout')).terraform }} terraform
+#complete -o nospace -C {{ binaries_stdout.terraform }} terraform
 {% else %}
 autoload -U +X bashcompinit && bashcompinit
-complete -o nospace -C {{ (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='stdout')).terraform }} terraform
+complete -o nospace -C {{ binaries_stdout.terraform }} terraform
 {% endif %}
 {% endif %}
+
+# Timezone variable passed to ssh sessions for systems in UTC
+# See ~/.ssh/conf.d for 'SendEnv TZ'
+# and 'AcceptEnv TZ' in SSHD (on UTC systems):
+export TZ="{{ control_host_tz }}"

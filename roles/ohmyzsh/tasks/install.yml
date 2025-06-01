@@ -1,61 +1,42 @@
 ---
 - name: "[install] Check the binary locations for correct ~/.zshrc rendering"
-  ansible.builtin.command: "which {{ item }}"
+  # `command -v` is more portable and POSIX-compliant than `which`:
+  ansible.builtin.command: "command -v {{ item }}"
   loop:
     - zsh
     - terraform
   register: ohmyzsh_binaries
   changed_when: false
   failed_when: false
+  tags: ['ohmyzsh']
 
 - name: "[install] Clone ohmyzsh and plugins for fish-like behaviour"
   ansible.builtin.git:
     repo: "{{ item.repo }}"
-    dest: "{{ item.dest }}"
+    dest: >-
+      {{
+        ohmyzsh_install_dir if item.name == 'ohmyzsh' else
+        ohmyzsh_install_dir ~ '/' ~ item.dir
+      }}
     version: master
     update: true
+    force: true
     depth: 1
+    single_branch: true
     accept_newhostkey: true
   become: true
   register: ohmyzsh_plugins_clone
   until: ohmyzsh_plugins_clone is succeeded
-  loop:
-    - repo: https://github.com/robbyrussell/oh-my-zsh.git
-      dest: "{{ ohmyzsh_install_dir }}"
-    - repo: https://github.com/zsh-users/zsh-autosuggestions
-      dest: "{{ ohmyzsh_install_dir }}/custom/plugins/zsh-autosuggestions"
-    - repo: https://github.com/zsh-users/zsh-history-substring-search
-      dest: "{{ ohmyzsh_install_dir }}/custom/plugins/zsh-history-substring-search"
-    - repo: https://github.com/zsh-users/zsh-syntax-highlighting.git
-      dest: "{{ ohmyzsh_install_dir }}/custom/plugins/zsh-syntax-highlighting"
+  loop: "{{ ohmyzsh_repos }}"
+  when: item.install | default(false) | bool
+  vars:
+    ohmyzsh_repos: >-
+      {{
+        ohmyzsh_repo + ohmyzsh_custom_plugins + ohmyzsh_themes
+      }}
+  tags: ['ohmyzsh']
 
-- name: "[install] Clone Powerlevel9k theme to custom directory"
-  ansible.builtin.git:
-    repo: https://github.com/bhilburn/powerlevel9k.git
-    dest: "{{ ohmyzsh_install_dir }}/custom/powerlevel9k"
-    version: master
-    update: true
-    depth: 1
-    accept_newhostkey: true
-  become: true
-  register: ohmyzsh_pl9k_clone
-  until: ohmyzsh_pl9k_clone is succeeded
-  when: ohmyzsh_powerlevel9k is defined and true
-
-- name: "[install] Clone powerlevel10k theme to custom directory"
-  ansible.builtin.git:
-    repo: https://github.com/romkatv/powerlevel10k.git
-    dest: "{{ ohmyzsh_install_dir }}/custom/powerlevel10k"
-    version: master
-    update: true
-    depth: 1
-    accept_newhostkey: true
-  become: true
-  register: ohmyzsh_pl10k_clone
-  until: ohmyzsh_pl10k_clone is succeeded
-  when: ohmyzsh_powerlevel10k is defined and true
-
-- name: "[install] Setup zprofile for zsh"
+- name: "[install] Generate zprofile"
   ansible.builtin.template:
     src: zprofile.j2
     dest: "{{ ohmyzsh_zprofile_dir }}/zprofile"
@@ -64,6 +45,7 @@
     group: root
   become: true
   when: "'Darwin' not in ansible_os_family"
+  tags: ['ohmyzsh']
 
 # For Debian and maybe other distros:
 - name: "[install] Set up en_US.UTF-8 locale"
@@ -74,3 +56,4 @@
     - "'Darwin' not in ansible_os_family"
     - "'RedHat' not in ansible_os_family"
   become: true
+  tags: ['ohmyzsh']

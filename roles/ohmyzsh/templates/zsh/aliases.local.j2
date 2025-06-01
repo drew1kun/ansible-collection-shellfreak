@@ -35,9 +35,8 @@ alias wgetp='wget -P ~/Downloads/'
 # remove % symbol from curl answer in zsh (-w) as well as other odd output (-s):
 alias curl="curl -s -w '\n'"
 
-alias digextip='dig +short myip.opendns.com @resolver1.opendns.com'
-alias curlextip='curl -s https://4.ifcfg.me/' # HTTPS
-alias curlextip1='curl curlmyip.com'
+alias digextip='dig +short TXT o-o.myaddr.l.google.com @ns1.google.com'
+alias curlextip='curl -S https://icanhazip.com' # HTTPS
 
 # On MAC: do not use /usr/local/bin/ssh from Homebrew, use system one:
 # also to make this work with 'git push', make sure you removed openssh package from homebrew
