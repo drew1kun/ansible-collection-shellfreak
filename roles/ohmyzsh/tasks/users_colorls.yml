@@ -11,6 +11,7 @@
   become: true
   register: ohmyzsh_colorls_result
   until: ohmyzsh_colorls_result is succeeded
+  tags: ['ohmyzsh']
 
 - name: '[users_colorls] Ensure the configuration directory exists for all users'
   ansible.builtin.file:
@@ -23,6 +24,7 @@
   when:
     - ohmyzsh_users | length > 1
     - item.colorls
+  tags: ['ohmyzsh']
 
 - name: '[users_colorls] Copy custom colorls configuration'
   ansible.builtin.copy:
@@ -37,3 +39,4 @@
   when:
     - ohmyzsh_users | length > 1
     - item.colorls
+  tags: ['ohmyzsh']
