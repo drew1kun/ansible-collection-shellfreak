@@ -5,7 +5,11 @@
 {% if 'tmux' in (ohmyzsh_default_plugins|default([])|map(attribute='name')|list + item.plugins|default([])|list) %}
 ZSH_TMUX_AUTOSTART=false  # true - will start tmux automatically ATTACHED TO CURRENT SESSION!
 {% endif %}
-if [ "${TMUX}" = "" ]; then tmux; fi
+# Avoid "double tmux" in ssh sessions -
+# Only start tmux if not already in tmux and on an interactive shell:
+if [ -z "$TMUX" ] && [ -z "$SSH_TTY" ] && [ -n "$PS1" ]; then
+    tmux
+fi
 {% endif %}
 
 # Path to your oh-my-zsh configuration.
