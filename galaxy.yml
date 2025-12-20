@@ -1,27 +1,29 @@
 namespace: drew1kun
 name: shellfreak
-version: 1.2.0
+version: 1.2.2
+deprecated:
+  reason: "1.2.1 was published without the signature; use 1.2.2 or later."
 readme: README.md
 authors:
--  <>
+  -  <>
 description: Ansible Collection for slick and freakish shell experience.
 
-# The path to the license file for the collection. This path is relative to the root of the collection. This key is
-# mutually exclusive with 'license'
+# The path to the license file for the collection. This path is relative to
+# the root of the collection. This key is mutually exclusive with 'license'
 license_file: 'LICENSE'
 tags:
-- shell
-- ohmyzsh
-- oh_my_zsh
-- mpd
-- mpc
-- ncmpcpp
-- nvim
-- neovim
-- tmux
-- macos
-- mac
-- linux
+  - shell
+  - ohmyzsh
+  - oh_my_zsh
+  - mpd
+  - mpc
+  - ncmpcpp
+  - nvim
+  - neovim
+  - tmux
+  - macos
+  - mac
+  - linux
 
 #dependencies:
 #  community.general: ">=3.0.0"
@@ -32,6 +34,6 @@ homepage: https://github.com/drew1kun/ansible-collection-shellfreak
 issues: https://github.com/drew1kun/ansible-collection-shellfreak/issues
 
 build_ignore:
-- '*.tar.gz'
-- 'signatures'
-- 'galaxy-publish.yml'
+  - '*.tar.gz'
+  - 'signatures'
+  - 'galaxy-publish.yml'
