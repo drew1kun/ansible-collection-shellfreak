@@ -1,15 +1,16 @@
 ---
 - name: '[main] Include {{ ansible_os_family }}-specific variables'
   ansible.builtin.include_vars: "{{ ansible_os_family|lower }}.yml"
-  tags: ['ohmyzsh']
+  tags: &ohmyzsh_tags
+    - ohmyzsh
 
 - name: '[main] Import dependencies installation tasks'
   ansible.builtin.include_tasks: "dependencies/{{ ansible_system|lower }}.yml"
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 - name: '[main] Import installation tasks'
   ansible.builtin.import_tasks: install.yml
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 - name: '[main] Detect full timezone name on control node for using in ~/.zshrc template'
   delegate_to: localhost
@@ -27,7 +28,7 @@
       {% else %}
         echo "Unknown"
       {% endif %}
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 # Must go before ohmyzsh configuration, in order to setup correct aliases
 ##- name: '[main] Include users_colorls.yml tasks for per-user installation if any users are specified'
@@ -42,7 +43,7 @@
   when:
     - ohmyzsh_users is defined
     - ohmyzsh_users | length > 0
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 - name: '[main] ATTENTION! SOME BINARIES ARE NOT PRESENT!'
   debug:
@@ -51,7 +52,16 @@
       ALTHOUGH, TERRAFORM BINARY IS NOT FOUND ON THE MANAGED SYSTEM.
       THE TERRAFORM PLUGIN CONFIGURATION WAS COMMENTED OUT IN ~/.zshrc
       PLEASE REVIEW THE ~/.zshrc FILE IF PLANNING TO USE TERRAFORM PLUGIN
-  when:
-    - "'terraform' in ohmyzsh_default_plugins|default|list + ohmyzsh_users|map(attribute='plugins',default=[])|flatten"
-    - (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='rc')).terraform|int > 0
-  tags: ['ohmyzsh']
+  when: >-
+    {{
+      ( 'terraform' in (ohmyzsh_default_plugins|default([])) +
+        ohmyzsh_users
+        | map(attribute='plugins',default=[])
+        |flatten) and
+      (
+        ( ohmyzsh_binaries.results
+          | items2dict(key_name='item', value_name='rc')
+        ).terraform | int > 0
+      )
+    }}
+  tags: *ohmyzsh_tags

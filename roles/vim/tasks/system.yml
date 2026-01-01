@@ -1,14 +1,29 @@
 ---
 - name: "[system] Generating /etc/vim/vimrc from template"
-  ansible.builtin.template: src=vimrc.j2 dest="{{ vim_root_config }}" owner=root group=root mode=0644
+  ansible.builtin.template:
+    src: vimrc.j2
+    dest: "{{ vim_root_config }}"
+    owner: root
+    group: root
+    mode: 0644
   become: true
 
 - name: "[system] Generating /etc/vim/vimrc.local from template"
-  ansible.builtin.template: src=vimrc.local.j2 dest="{{ vim_root_local_config }}" owner=root group=root mode=0644
+  ansible.builtin.template:
+    src: vimrc.local.j2
+    dest: "{{ vim_root_local_config }}"
+    owner: root
+    group: root
+    mode: 0644
   become: true
 
 - name: "[system] Generating /etc/vim/{{ vim_pm_config }} from template"
-  ansible.builtin.template: src="{{ vim_pm_config }}.j2" dest="{{ vim_root_plugins }}" owner=root group=root mode=0644
+  ansible.builtin.template:
+    src: "{{ vim_pm_config }}.j2"
+    dest: "{{ vim_root_plugins }}"
+    owner: root
+    group: root
+    mode: 0644
   become: true
 
 - name: "[system] Generating /etc/vim/vimrc.{{ plugin }} config files from templates"
@@ -23,13 +38,19 @@
   when: "item.0.name in item.1.name"
 
 - name: "[system] Copying .vim folder to /var/lib/vim/addons/"
-  ansible.builtin.copy: src=vim/ dest=/var/lib/vim/addons/ directory_mode=0755 mode=0644
+  ansible.builtin.copy:
+    src: vim/
+    dest: /var/lib/vim/addons/
+    directory_mode: 0755
+    mode: 0644
   become: true
 
 # remove the old /root/.vim directory for idempotent plugin installation with vundle
 # needed for system-wide installation only
 - name: "[system] removing old /root/.vim directory if present"
-  ansible.builtin.file: path=/root/.vim state=absent
+  ansible.builtin.file:
+    path: /root/.vim
+    state: absent
   become: true
 
 - name: '[user] Download en.utf-8.spl spell file from ftp'
@@ -61,4 +82,8 @@
   become: true
 
 - name: "[system] Include {{ vim_plugin_manager }} plugin manager and plugins installation tasks"
-  ansible.builtin.include_tasks: "{{ vim_plugin_manager }}.yml"
+  ansible.builtin.include_tasks:
+    file: "{{ vim_plugin_manager }}.yml"
+    apply:
+      tags: always
+  tags: always

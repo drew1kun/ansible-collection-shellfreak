@@ -7,17 +7,33 @@
   register: tmux_version
   changed_when: false
 
-- name: '[config] Generate tmux custom configuration'
-  ansible.builtin.template:
-    src: tmux.conf.j2
-    dest: "{{ tmux_root_dir if item == 'root' else tmux_home_dir ~ item }}/.tmux.conf"
+- name: '[config] Copy tmuxline file'
+  ansible.builtin.copy:
+    src: tmuxline.conf
+    dest: >-
+      {{
+        tmux_root_dir if item == 'root' else tmux_home_dir ~ item
+      }}/.tmuxline.conf
     mode: 0644
     owner: "{{ item }}"
-    group: >-
+    group: &tmux_config_group >-
       {{
         item if 'Darwin' not in ansible_os_family else
         'wheel' if item == 'root' else 'staff'
       }}
+  loop: "{{ tmux_users|flatten(levels=1) }}"
+  become: true
+
+- name: '[config] Generate tmux custom configuration'
+  ansible.builtin.template:
+    src: tmux.conf.j2
+    dest: >-
+      {{
+        tmux_root_dir if item == 'root' else tmux_home_dir ~ item
+      }}/.tmux.conf
+    mode: 0644
+    owner: "{{ item }}"
+    group: *tmux_config_group
   when: "item.state is not defined or 'present'in item.state"
   loop: "{{ tmux_users|flatten(levels=1) }}"
   become: true

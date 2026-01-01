@@ -99,6 +99,7 @@ ansible-galaxy collection install drew1kun.shellfreak
 Play:
 
 ```yaml
+---
 - hosts: macbooks
   gather_facts: yes
   collections:

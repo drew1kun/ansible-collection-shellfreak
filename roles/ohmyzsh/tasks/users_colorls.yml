@@ -11,7 +11,8 @@
   become: true
   register: ohmyzsh_colorls_result
   until: ohmyzsh_colorls_result is succeeded
-  tags: ['ohmyzsh']
+  tags: &ohmyzsh_tags
+    - ohmyzsh
 
 - name: '[users_colorls] Ensure the configuration directory exists for all users'
   ansible.builtin.file:
@@ -24,14 +25,19 @@
   when:
     - ohmyzsh_users | length > 1
     - item.colorls
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 - name: '[users_colorls] Copy custom colorls configuration'
   ansible.builtin.copy:
     src: colorls/
     dest: ~/.config/colorls/
     owner: "{{ item.user }}"
-    group: "{{ item.user if ansible_os_family != 'Darwin' else 'wheel' if item.user == 'root' else 'staff' }}"
+    group: >-
+      {{
+        item.user if ansible_os_family != 'Darwin' else
+        'wheel' if item.user == 'root' else
+        'staff'
+      }}
     mode: 0644
   become: true
   become_user: "{{ item.user }}"
@@ -39,4 +45,4 @@
   when:
     - ohmyzsh_users | length > 1
     - item.colorls
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags

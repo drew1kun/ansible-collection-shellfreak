@@ -2,7 +2,8 @@
 galaxy_info:
   role_name: tmux
   author: 
-  description: Ansible role that installs and configures tmux
+  description: |
+    Ansible role that installs and configures tmux
   license: MIT
   min_ansible_version: 1.7
   github_branch: master

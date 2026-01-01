@@ -1,12 +1,17 @@
 ---
 - name: '[non-darwin] Make sure vim-tiny is uninstalled'
-  ansible.builtin.package: name=vim-tiny state=absent purge=true
+  ansible.builtin.package:
+    name: vim-tiny
+    state: absent
+    purge: true
   register: vim_install_result
   until: vim_install_result is succeeded
   become: true
 
 - name: '[non-darwin] Make sure vim-nox is installed'
-  ansible.builtin.package: name=vim-nox state=present
+  ansible.builtin.package:
+    name: vim-nox
+    state: present
   register: vim_remove_result
   until: vim_remove_result is succeeded
   become: true

@@ -1,12 +1,15 @@
+---
 namespace: drew1kun
 name: shellfreak
-version: 1.2.2
+version: 1.2.3
 deprecated:
-  reason: "1.2.1 was published without the signature; use 1.2.2 or later."
+  reason: |
+    "1.2.1 was published without the signature; use 1.2.2 or later."
 readme: README.md
 authors:
   -  <>
-description: Ansible Collection for slick and freakish shell experience.
+description: |
+  Ansible Collection for slick and freakish shell experience.
 
 # The path to the license file for the collection. This path is relative to
 # the root of the collection. This key is mutually exclusive with 'license'
@@ -25,8 +28,8 @@ tags:
   - mac
   - linux
 
-#dependencies:
-#  community.general: ">=3.0.0"
+# dependencies:
+#   community.general: ">=3.0.0"
 
 repository: https://github.com/drew1kun/ansible-collection-shellfreak.git
 documentation: https://github.com/drew1kun/ansible-collection-shellfreak/blob/main/README.md
