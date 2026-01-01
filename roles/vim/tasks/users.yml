@@ -1,7 +1,10 @@
 ---
 # Create a directory ~/.vim.local in order not to pollute home directory
 - name: "[users] Create {{ vim_root_cust_conf_dir }} directory for custom configuration content"
-  ansible.builtin.file: path="{{ vim_root_conf_plug_dir }}" state=directory mode=0755
+  ansible.builtin.file:
+    path: "{{ vim_root_conf_plug_dir }}"
+    state: directory
+    mode: 0755
   become: true    # Required for become_user to work
   become_user: "{{ item }}"
   loop: "{{ vim_users }}"
@@ -119,4 +122,10 @@
   when: "not 'Darwin' in ansible_system"
 
 - name: "[users] Include {{ vim_plugin_manager }} plugin manager and plugins installation tasks"
-  ansible.builtin.include_tasks: "{{ vim_plugin_manager }}.yml"
+  ansible.builtin.include_tasks:
+    file: "{{ vim_plugin_manager }}.yml"
+    apply:
+      tags:
+        - always
+  tags:
+    - always

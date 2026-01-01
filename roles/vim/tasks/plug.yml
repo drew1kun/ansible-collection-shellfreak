@@ -4,10 +4,11 @@
     path: ~/.vim/autoload/
     state: directory
     owner: "{{ item }}"
-    group: >-
+    group: &vim_file_group_loop >-
       {{
         item if not 'Darwin' in ansible_system else
-        'wheel' if item == 'root' else 'staff'
+        'wheel' if item == 'root' else
+        'staff'
       }}
     mode: 0755
   loop: "{{ vim_users }}"
@@ -22,7 +23,8 @@
     path: /etc/vim/autoload
     state: directory
     owner: "{{ item }}"
-    group: "{{ 'root' if 'Debian' in ansible_os_family else 'wheel' }}"
+    group: &vim_file_group >-
+      {{ 'root' if 'Debian' in ansible_os_family else 'wheel' }}
     mode: 0755
   become: true
   when: "'system' in vim_env"
@@ -32,11 +34,7 @@
     url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     dest: ~/.vim/autoload/plug.vim
     owner: "{{ item }}"
-    group: >-
-      {{
-        item if not 'Darwin' in ansible_system else
-        'wheel' if item == 'root' else 'staff'
-      }}
+    group: *vim_file_group_loop
     mode: 0644
   loop: "{{ vim_users }}"
   become: true
@@ -52,7 +50,7 @@
     url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     dest: /etc/vim/autoload/plug.vim
     owner: "{{ item }}"
-    group: "{{ 'root' if 'Debian' in ansible_os_family else 'wheel' }}"
+    group: *vim_file_group
     mode: 0644
   register: vim_plug_result
   until: vim_plug_result is succeeded
@@ -72,19 +70,33 @@
 # ignore_errors: true
 #
 # For troubleshooting add -V switch to this command and run it directly on the target
+# To remove plugin for testing comment it out in ~/.vim/vim.local/vimrc.plug,
+# Then run:
+#   nvim -E -s -V -u ~/.config/nvim/vim.local/vimrc.plug -c "PlugClean\!" -c "qa"
+# Then check if the plugin dir is in ~/.vim/plugged/
 - name: '[plug] Downloading plugins using Plug per user'
-  ansible.builtin.command: 'vim -E -s -c "source ~/.vimrc" -c PlugInstall -c qa'
+  ansible.builtin.command:
+    cmd: >-
+      vim -E -s -V -u {{ vim_root_plugins }} -c "PlugInstall --sync" -c "qa"
   loop: "{{ vim_users|flatten(levels=1) }}"
   become: true
   become_user: "{{ item }}"
   register: vim_plugins_result
   failed_when: vim_plugins_result.rc > 1
+  changed_when: >-
+    {{
+      ("Finished" in vim_plugins_result.stderr and
+        "Already up to date" not in vim_plugins_result.stdout
+      ) or
+      "Installed" in vim_plugins_result.stdout
+    }}
   when:
     - "'user' in vim_env"
     - vim_users is defined
 
 - name: '[plug] Downloading plugins using Plug system-wide'
-  ansible.builtin.command: 'vim -E -s -c "source /etc/vim/vimrc" -c PlugInstall -c qa'
+  ansible.builtin.command:
+    cmd: 'vim -E -s -c "source /etc/vim/vimrc" -c PlugInstall -c qa'
   become: true
   register: vim_plugins_result
   failed_when: vim_plugins_result.rc > 1

@@ -12,22 +12,19 @@
   register: vim_shell
   changed_when: false
 
-- name: '[Darwin] Set vim as a default editor for visudo in ~/bash_profile if using bash'
+- name: '[Darwin] Configure Vim environment variables'
   ansible.builtin.lineinfile:
-    path: >-
+    path: &vim_darwin_path >-
       ~/.{{
           'zshrc' if 'zsh' in vim_shell.stdout else
           'bash_profile' if 'bash' in vim_shell.stdout
          }}
-    regexp: '^.*export\sEDITOR=.*'
-    line: 'export EDITOR=vim visudo'
-
-- name: '[Darwin] Set TERM environment variable in ~/.bash_profile if using bash'
-  ansible.builtin.lineinfile:
-    path: >-
-      ~/.{{
-          'zshrc' if 'zsh' in vim_shell.stdout else
-          'bash_profile' if 'bash' in vim_shell.stdout
-         }}
-    regexp: '^.*export\sTERM=.*'
-    line: 'export TERM="xterm-256color"'
+    regexp: "{{ vim_bash_vars.regexp }}"
+    line: "{{ vim_bash_vars.line }}"
+  loop_control:
+    loop_var: vim_bash_vars
+  loop:
+    - regexp: '^.*export\sEDITOR=.*'
+      line: 'export EDITOR=vim visudo'
+    - regexp: '^.*export\sTERM=.*'
+      line: 'export TERM="xterm-256color"'

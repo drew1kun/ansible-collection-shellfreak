@@ -8,7 +8,8 @@
   register: ohmyzsh_binaries
   changed_when: false
   failed_when: false
-  tags: ['ohmyzsh']
+  tags: &ohmyzsh_tags
+    - ohmyzsh
 
 - name: "[install] Clone ohmyzsh and plugins for fish-like behaviour"
   ansible.builtin.git:
@@ -34,7 +35,7 @@
       {{
         ohmyzsh_repo + ohmyzsh_custom_plugins + ohmyzsh_themes
       }}
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 - name: "[install] Generate zprofile"
   ansible.builtin.template:
@@ -45,7 +46,7 @@
     group: root
   become: true
   when: "'Darwin' not in ansible_os_family"
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 # For Debian and maybe other distros:
 - name: "[install] Set up en_US.UTF-8 locale"
@@ -56,4 +57,4 @@
     - "'Darwin' not in ansible_os_family"
     - "'RedHat' not in ansible_os_family"
   become: true
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags

@@ -11,12 +11,17 @@
     - "'Darwin' in ansible_os_family"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ['ohmyzsh']
+  tags: &ohmyzsh_tags
+    - ohmyzsh
 
 - name: '[users] Generate default zshrc in user home directory'
   ansible.builtin.template:
     src: zshrc.j2
-    dest: "{{ ohmyzsh_root_dir if item.user == 'root' else ohmyzsh_home_dir ~ item.user }}/.zshrc"
+    dest: >-
+      {{
+        ohmyzsh_root_dir if item.user == 'root' else
+        ohmyzsh_home_dir ~ item.user
+      }}/.zshrc
     force: true
     mode: 0644
     owner: "{{ item.user }}"
@@ -30,52 +35,87 @@
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: "{{ item.user == 'root' or item.user != ansible_user_id }}"
   become_user: "{{ item.user if item.user != 'root' else omit }}"
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 - name: '[users] Create directory structure'
   ansible.builtin.file:
-    path: "{{ ohmyzsh_root_dir if item.user == 'root' else ohmyzsh_home_dir ~ item.user }}/.zsh"
+    path: >-
+      {{
+        ohmyzsh_root_dir if item.user == 'root' else
+        ohmyzsh_home_dir ~ item.user
+      }}/.zsh
     state: directory
     recurse: true
     owner: "{{ item.user }}"
-    group: "{{ item.user if 'Darwin' not in ansible_os_family else 'wheel' if item.user == 'root' else 'staff' }}"
+    group: >-
+      {{
+        item.user if 'Darwin' not in ansible_os_family else
+        'wheel' if item.user == 'root' else
+        'staff'
+      }}
   when: "item.state is not defined or 'present'in item.state"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 - name: '[users] Generate default aliases'
   ansible.builtin.template:
     src: zsh/aliases.j2
-    dest: "{{ ohmyzsh_root_dir if item.user == 'root' else ohmyzsh_home_dir ~ item.user }}/.zsh/aliases"
+    dest: >-
+      {{
+        ohmyzsh_root_dir if item.user == 'root' else
+        ohmyzsh_home_dir ~ item.user
+      }}/.zsh/aliases
     mode: 0644
     owner: "{{ item.user }}"
-    group: "{{ item.user if 'Darwin' not in ansible_os_family else 'wheel' if item.user == 'root' else 'staff' }}"
+    group: >-
+      {{
+        item.user if 'Darwin' not in ansible_os_family else
+        'wheel' if item.user == 'root' else
+        'staff'
+      }}
   when: "item.state is not defined or 'present'in item.state"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 - name: '[users] Generate custom aliases'
   ansible.builtin.template:
     src: zsh/aliases.local.j2
-    dest: "{{ ohmyzsh_root_dir if item.user == 'root' else ohmyzsh_home_dir ~ item.user }}/.zsh/aliases.local"
+    dest: >-
+      {{
+        ohmyzsh_root_dir if item.user == 'root' else
+        ohmyzsh_home_dir ~ item.user
+      }}/.zsh/aliases.local
     mode: 0644
     owner: "{{ item.user }}"
-    group: "{{ item.user if 'Darwin' not in ansible_os_family else 'wheel' if item.user == 'root' else 'staff' }}"
+    group: >-
+      {{
+        item.user if 'Darwin' not in ansible_os_family else
+        'wheel' if item.user == 'root' else
+        'staff'
+      }}
   when: "item.state is not defined or 'present'in item.state"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 # Powerlevel9k
 - name: '[users] Generate Powerlevel9k custom configuration'
   ansible.builtin.copy:
     src: omz_powerlevel9k.cfg
-    dest: "{{ ohmyzsh_root_dir if item.user == 'root' else ohmyzsh_home_dir ~ item.user }}/.zsh/"
+    dest: >-
+      {{ ohmyzsh_root_dir if item.user == 'root' else
+        ohmyzsh_home_dir ~ item.user
+      }}/.zsh/
     mode: 0644
     owner: "{{ item.user }}"
-    group: "{{ item.user if 'Darwin' not in ansible_os_family else 'wheel' if item.user == 'root' else 'staff' }}"
+    group: >-
+      {{
+        item.user if 'Darwin' not in ansible_os_family else
+        'wheel' if item.user == 'root' else
+        'staff'
+      }}
   when:
     - "item.state is not defined or 'present'in item.state"
     - "'powerlevel9k' in item.theme"
@@ -87,7 +127,7 @@
       | default(false))
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 - name: '[users] Add custom sudoers config to not reset environment variables when doing `sudo -s` for each zsh user'
   ansible.builtin.template:
@@ -105,16 +145,25 @@
       | default(false))
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 # Powerlevel10k
 - name: '[users] Generate Powerlevel10k custom configuration'
   ansible.builtin.copy:
     src: p10k.zsh
-    dest: "{{ ohmyzsh_root_dir if item.user == 'root' else ohmyzsh_home_dir ~ item.user }}/.p10k.zsh"
+    dest: >-
+      {{
+        ohmyzsh_root_dir if item.user == 'root' else
+        ohmyzsh_home_dir ~ item.user
+      }}/.p10k.zsh
     mode: 0644
     owner: "{{ item.user }}"
-    group: "{{ item.user if 'Darwin' not in ansible_os_family else 'wheel' if item.user == 'root' else 'staff' }}"
+    group: >-
+      {{
+        item.user if 'Darwin' not in ansible_os_family else
+        'wheel' if item.user == 'root' else
+        'staff'
+      }}
   when:
     - "item.state is not defined or 'present'in item.state"
     - ohmyzsh_powerlevel10k_import_config
@@ -127,21 +176,25 @@
       | default(false))
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 # Post setup
 - name: '[users] Set zsh as default shell'
-  ansible.builtin.user: name={{ item.user }} shell=/bin/zsh
+  ansible.builtin.user:
+    name: "{{ item.user }}"
+    shell: /bin/zsh
   when: "item.state is not defined or 'present'in item.state"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
 
 - name: '[users] Set bash as default shell for uninstalled users'
-  ansible.builtin.user: name={{ item.user }} shell=/bin/bash
+  ansible.builtin.user:
+    name: "{{ item.user }}"
+    shell: /bin/bash
   when:
     - item.state is defined
     - "'absent' in item.state"
   loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
   become: true
-  tags: ['ohmyzsh']
+  tags: *ohmyzsh_tags
