@@ -148,7 +148,8 @@ export PATH="${PATH}:${HOME}/.rbenv/bin:${HOME}/.rbenv/shims"   # Rbenv: managin
 export PATH="${PATH}:${HOME}/.cargo/bin"                        # Cargo: installed crates
 export PATH="${PATH}:${HOME}/.local/bin:${HOME}/bin"            # User-wide installed binaries
 export GPG_TTY=$(tty)
-export EDITOR=vim visudo
+export EDITOR=vim
+export VISUAL=vim
 export SHELL="{{ (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='stdout')).zsh }}"
 export LC_TYPE="en_US.UTF-8"
 export LANG="en_US.UTF-8"

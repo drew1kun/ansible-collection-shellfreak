@@ -1,16 +1,17 @@
 ---
 galaxy_info:
   role_name: vim
-  author: 
+  author: drew1kun
   description: |
-    Ansible role that installs and configures vim/neovim with plugin managers
+    Role that installs and configures vim/neovim with plugin managers
     like plug/vundle with a set of preconfigured plugins and themes.
     This is a feature/speed-balanced IDE-like configuration.
   license: MIT
-  min_ansible_version: 1.9
+  min_ansible_version: "1.9"
   platforms:
     - name: MacOSX
-      versions: all
+      versions:
+        - all
     - name: Ubuntu
       versions:
         - all
@@ -24,8 +25,8 @@ galaxy_info:
     - nvim
     - neovim
     - vundle
-    - vim_plug
-    - vim_plugin_manager
+    - plug
+    - plugin
     - ubuntu
     - trusty
     - kali

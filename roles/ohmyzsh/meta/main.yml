@@ -1,12 +1,12 @@
 ---
 galaxy_info:
   role_name: ohmyzsh
-  author: 
+  author: drew1kun
   description: |
-    Ansible role that installs zsh and oh-my-zsh.
+    Role that installs zsh and oh-my-zsh.
   license: MIT
-  min_ansible_version: 1.7
-  github_branch: master
+  min_ansible_version: "1.7"
+  github_branch: main
   platforms:
     - name: Ubuntu
       versions:
@@ -14,7 +14,7 @@ galaxy_info:
     - name: Debian
       versions:
         - all
-    - name: RedHat
+    - name: EL
       versions:
         - all
     - name: MacOSX

@@ -1,5 +1,5 @@
 ---
-- name: "[main] Include variables for {{ vim_plugin_manager }} plugin manager"
+- name: "[main] Include variables for {{ vim_plugin_manager ~ ' plugin manager' }}"
   ansible.builtin.include_vars: "{{ vim_plugin_manager }}.yml"
   tags: &vim_tags
     - vim
@@ -34,7 +34,7 @@
   when: "not 'Darwin' in ansible_system"
   tags: *vim_tags
 
-- name: "[main] Include vars for {{ vim_env }}-wide installation"
+- name: "[main] Include vars for {{ vim_env ~ '-wide installation' }}"
   ansible.builtin.include_vars: "{{ vim_env }}.yml"
   tags: *vim_tags
 
@@ -61,7 +61,7 @@
     file: airline.yml
     apply:
       <<: *vim_tags_apply
-  loop: "{{ vim_plugins|flatten(levels=1) }}"
+  loop: "{{ vim_plugins | flatten(levels=1) }}"
   when: item.name == 'vim-airline/vim-airline'
   tags: *vim_tags
 

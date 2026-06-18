@@ -1,7 +1,7 @@
 ---
 namespace: drew1kun
 name: shellfreak
-version: 1.2.3
+version: 1.2.4
 deprecated:
   reason: |
     "1.2.1 was published without the signature; use 1.2.2 or later."

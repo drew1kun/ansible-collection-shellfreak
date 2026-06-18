@@ -41,7 +41,7 @@
   ansible.builtin.template:
     src: zprofile.j2
     dest: "{{ ohmyzsh_zprofile_dir }}/zprofile"
-    mode: 0644
+    mode: "0644"
     owner: root
     group: root
   become: true

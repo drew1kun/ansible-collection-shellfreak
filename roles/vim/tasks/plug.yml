@@ -10,7 +10,7 @@
         'wheel' if item == 'root' else
         'staff'
       }}
-    mode: 0755
+    mode: "0755"
   loop: "{{ vim_users }}"
   become: true
   become_user: "{{ item }}"
@@ -25,7 +25,7 @@
     owner: "{{ item }}"
     group: &vim_file_group >-
       {{ 'root' if 'Debian' in ansible_os_family else 'wheel' }}
-    mode: 0755
+    mode: "0755"
   become: true
   when: "'system' in vim_env"
 
@@ -35,7 +35,7 @@
     dest: ~/.vim/autoload/plug.vim
     owner: "{{ item }}"
     group: *vim_file_group_loop
-    mode: 0644
+    mode: "0644"
   loop: "{{ vim_users }}"
   become: true
   become_user: "{{ item }}"
@@ -51,7 +51,7 @@
     dest: /etc/vim/autoload/plug.vim
     owner: "{{ item }}"
     group: *vim_file_group
-    mode: 0644
+    mode: "0644"
   register: vim_plug_result
   until: vim_plug_result is succeeded
   become: true
@@ -78,7 +78,7 @@
   ansible.builtin.command:
     cmd: >-
       vim -E -s -V -u {{ vim_root_plugins }} -c "PlugInstall --sync" -c "qa"
-  loop: "{{ vim_users|flatten(levels=1) }}"
+  loop: "{{ vim_users | flatten(levels=1) }}"
   become: true
   become_user: "{{ item }}"
   register: vim_plugins_result
@@ -100,4 +100,5 @@
   become: true
   register: vim_plugins_result
   failed_when: vim_plugins_result.rc > 1
+  changed_when: true
   when: "'system' in vim_env"
