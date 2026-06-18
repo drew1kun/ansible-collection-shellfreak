@@ -1,13 +1,17 @@
 ---
 # tasks file for mpd
 
-- name: "[main] Include {{ ansible_system }}-specific tasks"
+- name: "[main] Include {{ ansible_system ~ '-specific tasks' }}"
   ansible.builtin.include_tasks:
-    file: "{{ ansible_system|lower }}.yml"
+    file: "{{ ansible_system | lower }}.yml"
     apply:
-      tags: ['mpd']
-  tags: ['mpd', 'mpc','ncmpcpp']
+      tags: &mpd_tags
+        - mpd
+  tags:
+    - mpd
+    - mpc
+    - ncmpcpp
 
 - name: "[main] Flush all handlers"
   ansible.builtin.meta: flush_handlers
-  tags: ['mpd']
+  tags: *mpd_tags

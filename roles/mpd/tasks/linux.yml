@@ -1,13 +1,13 @@
 ---
 - name: '[linux] Install mpd package'
-  action: >
+  action: >-
     {{ ansible_pkg_mgr }} name=mpd state=present update_cache=true
   register: mpd_result
   until: mpd_result is succeeded
   become: true
 
 - name: '[linux] Install mpc package'
-  action: >
+  action: >-
     {{ ansible_pkg_mgr }} name=mpc state=present update_cache=true
   become: true
   register: mpd_mpc_result
@@ -16,7 +16,7 @@
   tags: ['mpc']
 
 - name: '[linux] Install ncmpcpp package'
-  action: >
+  action: >-
     {{ ansible_pkg_mgr }} name=ncmpcpp state=present update_cache=true
   become: true
   register: mpd_ncmpcpp_result
@@ -39,17 +39,23 @@
   become: true
 
 - name: '[linux] Generate mpd.conf from template'
-  ansible.builtin.template: src=mpd.conf.j2 dest=/etc/mpd.conf backup=true owner=root group=root mode=0644
+  ansible.builtin.template:
+    src: mpd.conf.j2
+    dest: /etc/mpd.conf
+    backup: true
+    owner: root
+    group: root
+    mode: "0644"
   notify: Restart mpd service
   become: true
 
 - name: '[linux] Create ~/.ncmpcpp folder for each mpd_user'
   ansible.builtin.file:
-    path: "{{ '' if item=='root' else '/home' }}/{{ item }}/.ncmpcpp"
+    path: "{{ '' if item == 'root' else '/home' }}/{{ item }}/.ncmpcpp"
     state: directory
     owner: "{{ item }}"
     group: "{{ item }}"
-    mode: 0755
+    mode: "0755"
   become: true
   loop: "{{ mpd_users }}"
   when:
@@ -61,10 +67,10 @@
 - name: '[linux] Generate ncmpcpp config from template for each mpd_user'
   ansible.builtin.template:
     src: ncmpcpp.conf.j2
-    dest: "{{ '' if item=='root' else '/home' }}/{{ item }}/.ncmpcpp/config"
+    dest: "{{ '' if item == 'root' else '/home' }}/{{ item }}/.ncmpcpp/config"
     owner: "{{ item }}"
     group: "{{ item }}"
-    mode: 0644
+    mode: "0644"
   become: true
   loop: "{{ mpd_users }}"
   when:
@@ -74,13 +80,14 @@
   tags: ['ncmpcpp']
 
 - name: '[linux] Check firewalld stats'
-  ansible.builtin.stat: path="{{ item }}"
+  ansible.builtin.stat:
+    path: "{{ item }}"
   register: mpd_stat_firewalld
   become: true
   loop:
     - /usr/sbin/firewalld
     - /sbin/firewalld
-  when: mpd_firewalld|default(false)|bool == true
+  when: mpd_firewalld|default(false)|bool
 
 - name: '[linux] Open mpd port in firewall'
   ansible.posix.firewalld:
@@ -92,7 +99,7 @@
   loop: "{{ mpd_firewalld_zones }}"
   become: true
   when:
-    - mpd_firewalld|default(false)|bool == true
+    - mpd_firewalld|default(false)|bool
     - mpd_stat_firewalld.results[0].stat.exists
       or
       mpd_stat_firewalld.results[1].stat.exists

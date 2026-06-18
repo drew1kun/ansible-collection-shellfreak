@@ -18,10 +18,10 @@
   ansible.builtin.file:
     path: ~/.config/colorls
     state: directory
-    mode: 0755
+    mode: "0755"
   become: true
   become_user: "{{ item.user }}"
-  loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
+  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
   when:
     - ohmyzsh_users | length > 1
     - item.colorls
@@ -38,10 +38,10 @@
         'wheel' if item.user == 'root' else
         'staff'
       }}
-    mode: 0644
+    mode: "0644"
   become: true
   become_user: "{{ item.user }}"
-  loop: "{{ ohmyzsh_users|flatten(levels=1) }}"
+  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
   when:
     - ohmyzsh_users | length > 1
     - item.colorls

@@ -1,15 +1,15 @@
 ---
 # Create a directory ~/.vim.local in order not to pollute home directory
-- name: "[users] Create {{ vim_root_cust_conf_dir }} directory for custom configuration content"
+- name: "[users] Create {{ vim_root_cust_conf_dir ~ ' directory for custom configuration content' }}"
   ansible.builtin.file:
     path: "{{ vim_root_conf_plug_dir }}"
     state: directory
-    mode: 0755
+    mode: "0755"
   become: true    # Required for become_user to work
   become_user: "{{ item }}"
   loop: "{{ vim_users }}"
 
-- name: "[users] Generating {{ vim_root_config }} from template"
+- name: "[users] Generating {{ vim_root_config ~ ' from template' }}"
   ansible.builtin.template:
     src: vimrc.j2
     dest: "{{ vim_root_config }}"
@@ -19,13 +19,13 @@
         item if not 'Darwin' in ansible_system else
         'wheel' if item == 'root' else 'staff'
       }}
-    mode: 0644
+    mode: "0644"
   loop: "{{ vim_users }}"
   when: vim_users is defined
   become: true
   become_user: "{{ item }}"
 
-- name: "[users] Symlink {{ vim_root_config }} to ~/.vimrc"
+- name: "[users] Symlink {{ vim_root_config ~ ' to ~/.vimrc'}}"
   ansible.builtin.file:
     src: "{{ vim_root_config }}"
     dest: ~/.vimrc
@@ -35,7 +35,7 @@
   become_user: "{{ item }}"
   when: vim_users is defined
 
-- name: "[users] Generating {{ vim_root_local_config }} from template"
+- name: "[users] Generating {{ vim_root_local_config ~ ' from template' }}"
   ansible.builtin.template:
     src: vimrc.local.j2
     dest: "{{ vim_root_local_config }}"
@@ -45,13 +45,13 @@
         item if not 'Darwin' in ansible_system else
         'wheel' if item == 'root' else 'staff'
       }}
-    mode: 0644
+    mode: "0644"
   loop: "{{ vim_users }}"
   when: vim_users is defined
   become: true
   become_user: "{{ item }}"
 
-- name: "[users] Generating {{ vim_root_plugins }} from template"
+- name: "[users] Generating {{ vim_root_plugins ~ ' from template' }}"
   ansible.builtin.template:
     src: "{{ vim_pm_config }}.j2"
     dest: "{{ vim_root_plugins }}"
@@ -61,7 +61,7 @@
         item if not 'Darwin' in ansible_system else
         'wheel' if item == 'root' else 'staff'
       }}
-    mode: 0644
+    mode: "0644"
   loop: "{{ vim_users }}"
   when: vim_users is defined
   become: true
@@ -78,7 +78,7 @@
         item.0 if not 'Darwin' in ansible_system else
         'wheel' if item.0 == 'root' else 'staff'
       }}
-    mode: 0644
+    mode: "0644"
   with_nested:
     - "{{ vim_users }}"
     - "{{ vim_checklist }}"
@@ -90,7 +90,7 @@
     - "item.1.name in item.2.name"
 
 # This task causes idempotency issue
-- name: '[users] Copying .vim folder to ~/.vim'
+- name: "[users] Copying .vim folder to ~/.vim"
   ansible.builtin.copy:
     src: vim/
     dest: ~/.vim/
@@ -100,14 +100,14 @@
         item if not 'Darwin' in ansible_system else
         'wheel' if item == 'root' else 'staff'
       }}
-    directory_mode: 0755
-    mode: 0644
+    directory_mode: "0755"
+    mode: "0644"
   loop: "{{ vim_users }}"
   when: vim_users is defined
   become: true
   become_user: "{{ item }}"
 
-- name: '[users] Set EDITOR and TERM environment variables'
+- name: "[users] Set EDITOR and TERM environment variables"
   ansible.builtin.blockinfile:
     path: ~/.zshrc
     owner: "{{ item }}"
@@ -121,7 +121,7 @@
   loop: "{{ vim_users }}"
   when: "not 'Darwin' in ansible_system"
 
-- name: "[users] Include {{ vim_plugin_manager }} plugin manager and plugins installation tasks"
+- name: "[users] Include {{ vim_plugin_manager ~ ' plugin manager and plugins installation tasks' }}"
   ansible.builtin.include_tasks:
     file: "{{ vim_plugin_manager }}.yml"
     apply:

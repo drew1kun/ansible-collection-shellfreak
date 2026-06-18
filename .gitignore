@@ -1,3 +1,4 @@
+.ansible/
 *.key
 *.swp
 .DS_Store
@@ -10,3 +11,4 @@ collections
 test/results
 galaxy-publish.yml
 galaxy-publish-ci.yml
+galaxy_publish.md

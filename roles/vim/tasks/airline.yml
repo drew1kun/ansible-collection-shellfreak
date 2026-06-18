@@ -16,7 +16,7 @@
         'wheel' if vim_airline_user == 'root' else
         'staff'
       }}
-    mode: 0644
+    mode: "0644"
   loop: "{{ vim_users }}"
   loop_control:
     loop_var: vim_airline_user
@@ -36,7 +36,7 @@
       }}
     owner: root
     group: root
-    mode: 0644
+    mode: "0644"
   become: true
   when:
     - "'system' in vim_env"

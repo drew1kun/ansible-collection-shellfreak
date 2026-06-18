@@ -3,46 +3,41 @@
   ansible.builtin.template:
     src: vimrc.j2
     dest: "{{ vim_root_config }}"
-    owner: root
-    group: root
-    mode: 0644
+    <<: &vim_system_ownership
+      owner: root
+      group: root
+      mode: "0644"
   become: true
 
 - name: "[system] Generating /etc/vim/vimrc.local from template"
   ansible.builtin.template:
     src: vimrc.local.j2
     dest: "{{ vim_root_local_config }}"
-    owner: root
-    group: root
-    mode: 0644
+    <<: *vim_system_ownership
   become: true
 
-- name: "[system] Generating /etc/vim/{{ vim_pm_config }} from template"
+- name: "[system] Generating /etc/vim/{{ vim_pm_config ~ 'from template' }}"
   ansible.builtin.template:
     src: "{{ vim_pm_config }}.j2"
     dest: "{{ vim_root_plugins }}"
-    owner: root
-    group: root
-    mode: 0644
+    <<: *vim_system_ownership
   become: true
 
-- name: "[system] Generating /etc/vim/vimrc.{{ plugin }} config files from templates"
+- name: "[system] Generating /etc/vim/vimrc.{{ plugin ~ 'config files from templates' }}"
   ansible.builtin.template:
     src: "{{ item.1.src }}"
     dest: "{{ item.1.path }}"
-    owner: root
-    group: root
-    mode: 0644
+    <<: *vim_system_ownership
   become: true
-  loop: "{{ vim_plugins|product(vim_checklist)|list }}"
+  loop: "{{ vim_plugins | product(vim_checklist) | list }}"
   when: "item.0.name in item.1.name"
 
 - name: "[system] Copying .vim folder to /var/lib/vim/addons/"
   ansible.builtin.copy:
     src: vim/
     dest: /var/lib/vim/addons/
-    directory_mode: 0755
-    mode: 0644
+    directory_mode: "0755"
+    mode: "0644"
   become: true
 
 # remove the old /root/.vim directory for idempotent plugin installation with vundle
@@ -59,7 +54,7 @@
     dest: ~/.vim/spell/en.utf-8.spl
     owner: "{{ item }}"
     group: "{{ item if not 'Darwin' in ansible_system else 'wheel' if item == 'root' else 'staff' }}"
-    mode: 0644
+    mode: "0644"
   register: vim_spell_result
   until: vim_spell_result is succeeded
   loop: "{{ vim_users }}"
@@ -70,18 +65,15 @@
 - name: "[system] Setting EDITOR and TERM environment variables"
   ansible.builtin.blockinfile:
     path: /etc/profile.d/env_var.sh
-    follow: true
     create: true
-    mode: 0644
-    owner: root
-    group: root
+    <<: *vim_system_ownership
     content: |
       export EDITOR="/usr/bin/vim visudo"
       export TERM="xterm-256color"  # For vim colors in tmux
     marker: "# {mark} ======== VIM role: Ansible managed block ========="
   become: true
 
-- name: "[system] Include {{ vim_plugin_manager }} plugin manager and plugins installation tasks"
+- name: "[system] Include {{ vim_plugin_manager ~ 'plugin manager and plugins installation tasks' }}"
   ansible.builtin.include_tasks:
     file: "{{ vim_plugin_manager }}.yml"
     apply:

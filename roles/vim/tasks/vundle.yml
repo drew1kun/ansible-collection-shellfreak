@@ -40,6 +40,7 @@
   ansible.builtin.command: 'vim -E -s -c "source ~/.vimrc" -c PluginInstall -c qa'
   register: vim_plugins_result
   failed_when: vim_plugins_result.rc > 1
+  changed_when: true
   loop: "{{ vim_users }}"
   become: true
   become_user: "{{ item }}"
@@ -49,5 +50,6 @@
 
 - name: '[vundle] Downloading plugins using Vundle system-wide'
   ansible.builtin.command: 'vim -E -s -c "source /etc/vim/vimrc" -c PluginInstall -c qa'
+  changed_when: true
   become: true
   when: "'system' in vim_env"

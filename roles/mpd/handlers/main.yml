@@ -16,5 +16,6 @@
   ansible.builtin.command: brew services restart mpd
   environment:
     PATH: "/opt/homebrew/bin:/usr/local/bin:{{ ansible_env.PATH }}"
+  changed_when: true
   when: mpd_autostart
   become: false

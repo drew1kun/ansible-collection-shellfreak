@@ -1,21 +1,21 @@
 ---
-- name: '[main] Include {{ ansible_os_family }}-specific variables'
-  ansible.builtin.include_vars: "{{ ansible_os_family|lower }}.yml"
+- name: "[main] Include {{ ansible_os_family ~ '-specific variables' }}"
+  ansible.builtin.include_vars: "{{ ansible_os_family | lower }}.yml"
   tags: &ohmyzsh_tags
     - ohmyzsh
 
-- name: '[main] Import dependencies installation tasks'
-  ansible.builtin.include_tasks: "dependencies/{{ ansible_system|lower }}.yml"
+- name: "[main] Import dependencies installation tasks"
+  ansible.builtin.include_tasks: "dependencies/{{ ansible_system | lower }}.yml"
   tags: *ohmyzsh_tags
 
-- name: '[main] Import installation tasks'
+- name: "[main] Import installation tasks"
   ansible.builtin.import_tasks: install.yml
   tags: *ohmyzsh_tags
 
-- name: '[main] Detect full timezone name on control node for using in ~/.zshrc template'
+- name: "[main] Detect full timezone name on control node for using in ~/.zshrc template"
   delegate_to: localhost
   run_once: true
-  set_fact:
+  ansible.builtin.set_fact:
     control_host_tz: "{{ lookup('pipe', timezone_command) }}"
   vars:
     timezone_command: >-
@@ -30,38 +30,42 @@
       {% endif %}
   tags: *ohmyzsh_tags
 
-# Must go before ohmyzsh configuration, in order to setup correct aliases
-##- name: '[main] Include users_colorls.yml tasks for per-user installation if any users are specified'
-#  ansible.builtin.import_tasks: users_colorls.yml
-#  when:
-#    - ohmyzsh_users is defined
-#    - ohmyzsh_users | length > 0
-#    - ohmyzsh_users | selectattr('colorls','equalto',True) | list | count > 0
-#  tags: ['ohmyzsh']
-- name: '[main] Include users.yml tasks for multiple users installation if any users are specified'
+## Must go before ohmyzsh configuration, in order to setup correct aliases
+# - name: '[main] Include users_colorls.yml tasks for per-user installation if any users are specified'
+#   ansible.builtin.import_tasks: users_colorls.yml
+#   when:
+#     - ohmyzsh_users is defined
+#     - ohmyzsh_users | length > 0
+#     - ohmyzsh_users | selectattr('colorls','equalto',True) | list | count > 0
+#   tags: ['ohmyzsh']
+- name: "[main] Include users.yml tasks for multiple users installation if any users are specified"
   ansible.builtin.import_tasks: users.yml
   when:
     - ohmyzsh_users is defined
     - ohmyzsh_users | length > 0
   tags: *ohmyzsh_tags
 
-- name: '[main] ATTENTION! SOME BINARIES ARE NOT PRESENT!'
-  debug:
+- name: "[main] Build plugin list"
+  ansible.builtin.set_fact:
+    ohmyzsh_all_plugins: >-
+      {{ ( ohmyzsh_users
+          | map('default', {}, true)
+          | map(attribute='plugins', default=[])
+          | select('defined')
+          | list )
+        | flatten
+        | selectattr('name', 'defined')
+        | map(attribute='name')
+        | list }}
+
+- name: "[main] ATTENTION! SOME BINARIES ARE NOT PRESENT!"
+  ansible.builtin.debug:
     msg: |
       TERRAFORM PLUGIN WAS DETECTED IN THE LIST OF OMZSH PLUGINS,
       ALTHOUGH, TERRAFORM BINARY IS NOT FOUND ON THE MANAGED SYSTEM.
       THE TERRAFORM PLUGIN CONFIGURATION WAS COMMENTED OUT IN ~/.zshrc
       PLEASE REVIEW THE ~/.zshrc FILE IF PLANNING TO USE TERRAFORM PLUGIN
-  when: >-
-    {{
-      ( 'terraform' in (ohmyzsh_default_plugins|default([])) +
-        ohmyzsh_users
-        | map(attribute='plugins',default=[])
-        |flatten) and
-      (
-        ( ohmyzsh_binaries.results
-          | items2dict(key_name='item', value_name='rc')
-        ).terraform | int > 0
-      )
-    }}
+  when:
+    - "'terraform' in ohmyzsh_all_plugins"
+    - "(ohmyzsh_binaries.results | items2dict(key_name='item', value_name='rc')).terraform | default(0) | int > 0"
   tags: *ohmyzsh_tags

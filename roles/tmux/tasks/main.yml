@@ -1,28 +1,28 @@
 ---
-- name: "[main] Include {{ ansible_os_family }}-specific variables"
-  ansible.builtin.include_vars: "{{ ansible_system|lower }}.yml"
+- name: "[main] Include {{ ansible_system ~ '-specific variables' }}"
+  ansible.builtin.include_vars: "{{ ansible_system | lower }}.yml"
   tags: &tmux_tags
     - tmux
 
-- name: "[main] Include OS-specific installation tasks"
+- name: "[main] Include {{ ansible_system ~ '-specific installation tasks' }}"
   ansible.builtin.include_tasks:
-    file: "{{ ansible_system|lower }}.yml"
+    file: "{{ ansible_system | lower }}.yml"
     apply: &tmux_tags_apply
       tags:
         - tmux
   tags: *tmux_tags
 
-- name: "[main] Import Configuration tasks"
+- name: "[main] Import configuration tasks"
   ansible.builtin.import_tasks: config.yml
   tags: *tmux_tags
 
 - name: "[main] Include OS-specific installation tasks"
   ansible.builtin.include_tasks:
-    file: "{{ ansible_system|lower }}.yml"
+    file: "{{ ansible_system | lower }}.yml"
     apply:
       <<: *tmux_tags_apply
   tags: *tmux_tags
 
-- name: "[main] Import Configuration tasks"
+- name: "[main] Import configuration tasks"
   ansible.builtin.import_tasks: config.yml
   tags: *tmux_tags
