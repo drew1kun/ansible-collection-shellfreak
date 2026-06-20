@@ -62,7 +62,7 @@ Example of the play:
 
 ## Author Information
 
- | [e-mail](mailto:)
+drew1kun | [e-mail](mailto:snub-museum-body@duck.com)
 
 [collection-badge]: https://img.shields.io/badge/collection-drew1kun.shellfreak-green.svg
 [galaxy-link]: https://galaxy.ansible.com/drew1kun/shellfreak

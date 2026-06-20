@@ -107,7 +107,7 @@ License
 Author Information
 ----
 
- | [e-mail](mailto:)
+drew1kun | [e-mail](mailto:snub-museum-body@duck.com)
 
 [collection-badge]:https://img.shields.io/badge/collection-drew1kun.shellfreak-green.svg
 
