@@ -2,8 +2,6 @@
 # defaults file for mpd
 
 mpd_autostart: true
-#mpd_install_mpc: true
-#mpd_install_ncmpcpp: true
 mpd_users:
   - "{{ ansible_user_id }}"
 
