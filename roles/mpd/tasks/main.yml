@@ -9,8 +9,8 @@
         - mpd
   tags:
     - mpd
-    - mpc
-    - ncmpcpp
+    - mpd_mpc
+    - mpd_ncmpcpp
 
 - name: "[main] Flush all handlers"
   ansible.builtin.meta: flush_handlers

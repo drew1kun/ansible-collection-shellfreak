@@ -1,42 +1,38 @@
 ---
+- name: '[linux] Update apt cache on Debian-like systems'
+  ansible.builtin.apt:
+    update_cache: true
+  become: true
+  when: ansible_os_family == 'Debian'
+
 - name: '[linux] Install mpd package'
-  action: >-
-    {{ ansible_pkg_mgr }} name=mpd state=present update_cache=true
-  register: mpd_result
-  until: mpd_result is succeeded
+  ansible.builtin.package:
+    name:
+      - mpd
+      - mpc
+      - ncmpcpp
+    state: present
   become: true
-
-- name: '[linux] Install mpc package'
-  action: >-
-    {{ ansible_pkg_mgr }} name=mpc state=present update_cache=true
-  become: true
-  register: mpd_mpc_result
-  until: mpd_mpc_result is succeeded
-  when: mpd_install_mpc
-  tags: ['mpc']
-
-- name: '[linux] Install ncmpcpp package'
-  action: >-
-    {{ ansible_pkg_mgr }} name=ncmpcpp state=present update_cache=true
-  become: true
-  register: mpd_ncmpcpp_result
-  until: mpd_ncmpcpp_result is succeeded
-  when: mpd_install_ncmpcpp
-  tags: ['ncmpcpp']
+  tags:
+    - mpd_mpc
+    - mpd_ncmpcpp
 
 - name: '[linux] Enable and Start mpd service if needed'
   ansible.builtin.service:
-    name: mpd
-    enabled: "{{ mpd_autostart }}"
-    state: "{% if mpd_autostart %}started{% else %}stopped{% endif %}"
+    name: "{{ mpd_service.name }}"
+    enabled: "{{ mpd_service.enabled }}"
+    state: "{{ mpd_service.state }}"
   become: true
-
-- name: '[linux] Enable mpd socket if needed'
-  ansible.builtin.service:
-    name: mpd.socket
-    enabled: "{% if mpd_autostart %}false{% else %}true{% endif %}"
-    state: "{% if mpd_autostart %}stopped{% else %}started{% endif %}"
-  become: true
+  loop:
+    - name: mpd
+      enabled: "{{ mpd_autostart }}"
+      state: "{{ 'started' if mpd_autostart else 'stopped' }}"
+    - name: mpd.socket
+      enabled: "{{ not mpd_autostart }}"
+      state: "{{ 'stopped' if mpd_autostart else 'started' }}"
+  loop_control:
+    loop_var: mpd_service
+    label: "{{ mpd_service.name }}: enabled: {{ mpd_service.enabled }}, {{ mpd_service.state }}"
 
 - name: '[linux] Generate mpd.conf from template'
   ansible.builtin.template:
@@ -49,35 +45,34 @@
   notify: Restart mpd service
   become: true
 
-- name: '[linux] Create ~/.ncmpcpp folder for each mpd_user'
-  ansible.builtin.file:
-    path: "{{ '' if item == 'root' else '/home' }}/{{ item }}/.ncmpcpp"
-    state: directory
-    owner: "{{ item }}"
-    group: "{{ item }}"
-    mode: "0755"
+- name: 'Ncmpcpp config block'
   become: true
-  loop: "{{ mpd_users }}"
   when:
-    - mpd_install_ncmpcpp
     - mpd_users is defined
     - mpd_users | length > 0
-  tags: ['ncmpcpp']
+  tags: ['mpd_ncmpcpp']
+  block:
+    - name: '[linux] Create ~/.ncmpcpp folder for each mpd_user'  # noqa: key-order[task]
+      ansible.builtin.file:
+        path: "{{ '' if mpd_user == 'root' else '/home' }}/{{ mpd_user }}/.ncmpcpp"
+        state: directory
+        <<: &mpd_ownership
+          owner: "{{ mpd_user }}"
+          group: "{{ mpd_user }}"
+        mode: "0755"
+      <<: &mpd_users_loop
+        loop: "{{ mpd_users }}"
+        loop_control:
+          loop_var: mpd_user
+          label: "{{ mpd_user }}"
 
-- name: '[linux] Generate ncmpcpp config from template for each mpd_user'
-  ansible.builtin.template:
-    src: ncmpcpp.conf.j2
-    dest: "{{ '' if item == 'root' else '/home' }}/{{ item }}/.ncmpcpp/config"
-    owner: "{{ item }}"
-    group: "{{ item }}"
-    mode: "0644"
-  become: true
-  loop: "{{ mpd_users }}"
-  when:
-    - mpd_install_ncmpcpp
-    - mpd_users is defined
-    - mpd_users | length > 0
-  tags: ['ncmpcpp']
+    - name: '[linux] Generate ncmpcpp config from template for each mpd_user'   # noqa: key-order[task]
+      ansible.builtin.template:
+        <<: *mpd_ownership
+        src: ncmpcpp.conf.j2
+        dest: "{{ '' if mpd_user == 'root' else '/home' }}/{{ mpd_user }}/.ncmpcpp/config"
+        mode: "0644"
+      <<: *mpd_users_loop
 
 - name: '[linux] Check firewalld stats'
   ansible.builtin.stat:

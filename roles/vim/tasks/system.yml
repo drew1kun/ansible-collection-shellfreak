@@ -30,6 +30,8 @@
     <<: *vim_system_ownership
   become: true
   loop: "{{ vim_plugins | product(vim_checklist) | list }}"
+  loop_control:
+    label: "{{ item.0.name }} / {{ item.1.name }}"
   when: "item.0.name in item.1.name"
 
 - name: "[system] Copying .vim folder to /var/lib/vim/addons/"
@@ -48,20 +50,6 @@
     state: absent
   become: true
 
-- name: '[user] Download en.utf-8.spl spell file from ftp'
-  ansible.builtin.get_url:
-    url: ftp://ftp.vim.org/pub/vim/runtime/spell/en.utf-8.spl
-    dest: ~/.vim/spell/en.utf-8.spl
-    owner: "{{ item }}"
-    group: "{{ item if not 'Darwin' in ansible_system else 'wheel' if item == 'root' else 'staff' }}"
-    mode: "0644"
-  register: vim_spell_result
-  until: vim_spell_result is succeeded
-  loop: "{{ vim_users }}"
-  when: vim_users is defined
-  become: true
-  become_user: "{{ item }}"
-
 - name: "[system] Setting EDITOR and TERM environment variables"
   ansible.builtin.blockinfile:
     path: /etc/profile.d/env_var.sh
@@ -79,3 +67,16 @@
     apply:
       tags: always
   tags: always
+
+- name: "[system] Link system-wide Vim configuration"
+  ansible.builtin.file:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+  loop:
+    - src: /etc/vim
+      dest: /etc/xdg/nvim
+    - src: /etc/vimrc
+      dest: /etc/xdg/nvim/init.vim
+  become: true
+  when: vim_env | default('user') == 'system'

@@ -1,5 +1,5 @@
 ---
-- name: '[airline] install custom vim-airline themes per user'
+- name: "[airline] install custom vim-airline themes per user"
   ansible.builtin.copy:
     src: airline-custom-themes/
     dest: >-
@@ -20,11 +20,12 @@
   loop: "{{ vim_users }}"
   loop_control:
     loop_var: vim_airline_user
+    label: "{{ vim_airline_user }}"
   become: true
   become_user: "{{ vim_airline_user }}"
   when: "'user' in vim_env"
 
-- name: '[airline] install custom vim-airline themes system-wide'
+- name: "[airline] install custom vim-airline themes system-wide"
   ansible.builtin.copy:
     src: "airline-custom-themes/solarized_custom.vim"
     dest: >-

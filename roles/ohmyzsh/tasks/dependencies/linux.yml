@@ -4,18 +4,15 @@
     name: ['zsh', 'git', 'bc']
     state: present
   become: true
-  register: ohmyzsh_dep_result
-  until: ohmyzsh_dep_result is succeeded
-  when: "'Linux' in ansible_system"
+  when: ansible_system == 'Linux'
   tags: &ohmyzsh_dependency_tags
     - ohmyzsh
     - ohmyzsh_dependencies
 
 - name: '[dependencies:linux] Make sure locales package is installed on Debian'
+  become: true
   ansible.builtin.apt:
     name: locales
     state: present
-  register: ohmyzsh_dep_result
-  until: ohmyzsh_dep_result is succeeded
-  when: "'Debian' in ansible_os_family"
+  when: ansible_os_family == 'Debian'
   tags: *ohmyzsh_dependency_tags

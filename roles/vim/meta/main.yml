@@ -38,3 +38,21 @@ galaxy_info:
     - bullseye
     - macos
     - osx
+
+dependencies:
+  - role: drew1kun.shellfreak.pip
+    when: vim_env is defined
+    pip_venv_user: >-
+      {{
+        ansible_user_id
+        if 'user' in vim_env
+        else 'root'
+      }}
+    pip_venv_path: >-
+      {{
+        ansible_user_dir ~ '/.local/share/nvim/python-venv'
+        if 'user' in vim_env
+        else '/opt/nvim/python-venv'
+      }}
+    pip_packages:
+      - pynvim

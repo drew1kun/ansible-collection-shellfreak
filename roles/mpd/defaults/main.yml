@@ -2,11 +2,10 @@
 # defaults file for mpd
 
 mpd_autostart: true
-mpd_install_mpc: true
-mpd_install_ncmpcpp: true
+#mpd_install_mpc: true
+#mpd_install_ncmpcpp: true
 mpd_users:
   - "{{ ansible_user_id }}"
-  - root
 
 # open port in firewalld if not using socket;
 # NOTE! Tip: reuse it in mpd_config_base variable if needed.

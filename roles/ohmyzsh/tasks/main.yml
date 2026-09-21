@@ -12,6 +12,13 @@
   ansible.builtin.import_tasks: install.yml
   tags: *ohmyzsh_tags
 
+- name: Gather localhost facts
+  ansible.builtin.setup:
+  delegate_to: localhost
+  delegate_facts: true
+  run_once: true
+  tags: *ohmyzsh_tags
+
 - name: "[main] Detect full timezone name on control node for using in ~/.zshrc template"
   delegate_to: localhost
   run_once: true
@@ -19,11 +26,11 @@
     control_host_tz: "{{ lookup('pipe', timezone_command) }}"
   vars:
     timezone_command: >-
-      {% if ansible_system in ['Darwin', 'FreeBSD', 'OpenBSD', 'NetBSD'] %}
+      {% if hostvars['localhost'].ansible_system in ['Darwin', 'FreeBSD', 'OpenBSD', 'NetBSD'] %}
         readlink /etc/localtime | sed 's|.*/zoneinfo/||'
-      {% elif ansible_system == 'Linux' %}
+      {% elif hostvars['localhost'].ansible_system == 'Linux' %}
         timedatectl show -p Timezone --value
-      {% elif ansible_system == 'Windows' %}
+      {% elif hostvars['localhost'].ansible_system == 'Windows' %}
         tzutil /g
       {% else %}
         echo "Unknown"

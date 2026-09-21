@@ -1,56 +1,58 @@
 ---
-- name: '[plug] Ensure the installation directory exists per user'
+- name: "[plug] Ensure the installation directory exists per user"  # noqa: key-order[task]
   ansible.builtin.file:
     path: ~/.vim/autoload/
     state: directory
-    owner: "{{ item }}"
-    group: &vim_file_group_loop >-
-      {{
-        item if not 'Darwin' in ansible_system else
-        'wheel' if item == 'root' else
-        'staff'
-      }}
+    <<: &vim_file_group_loop
+      owner: "{{ vim_plug_user }}"
+      group: >-
+        {{
+          vim_plug_user if not 'Darwin' in ansible_system else
+          'wheel' if vim_plug_user == 'root' else
+          'staff'
+        }}
     mode: "0755"
-  loop: "{{ vim_users }}"
-  become: true
-  become_user: "{{ item }}"
+  <<: &vim_users_loop
+    loop: "{{ vim_users }}"
+    loop_control:
+      loop_var: vim_plug_user
+      label: "{{ vim_plug_user }}"
+    become: true
+    become_user: "{{ vim_plug_user }}"
   when:
     - "'user' in vim_env"
     - vim_users is defined
 
-- name: '[plug] Ensure the installation directory exists system-wide'
+- name: "[plug] Ensure the installation directory exists system-wide"
   ansible.builtin.file:
     path: /etc/vim/autoload
     state: directory
-    owner: "{{ item }}"
-    group: &vim_file_group >-
-      {{ 'root' if 'Debian' in ansible_os_family else 'wheel' }}
+    <<: &vim_file_ownership
+      owner: root
+      group: >-
+        {{ 'root' if 'Debian' in ansible_os_family else 'wheel' }}
     mode: "0755"
   become: true
   when: "'system' in vim_env"
 
-- name: '[plug] Install Plug per user'
+- name: "[plug] Install Plug per user"  # noqa: key-order[task]
   ansible.builtin.get_url:
     url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     dest: ~/.vim/autoload/plug.vim
-    owner: "{{ item }}"
-    group: *vim_file_group_loop
+    <<: *vim_file_group_loop
     mode: "0644"
-  loop: "{{ vim_users }}"
-  become: true
-  become_user: "{{ item }}"
+  <<: *vim_users_loop
   register: vim_plug_result
   until: vim_plug_result is succeeded
   when:
     - "'user' in vim_env"
     - vim_users is defined
 
-- name: '[plug] Install Plug system-wide'
+- name: "[plug] Install Plug system-wide"
   ansible.builtin.get_url:
     url: https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
     dest: /etc/vim/autoload/plug.vim
-    owner: "{{ item }}"
-    group: *vim_file_group
+    <<: *vim_file_ownership
     mode: "0644"
   register: vim_plug_result
   until: vim_plug_result is succeeded
@@ -74,13 +76,10 @@
 # Then run:
 #   nvim -E -s -V -u ~/.config/nvim/vim.local/vimrc.plug -c "PlugClean\!" -c "qa"
 # Then check if the plugin dir is in ~/.vim/plugged/
-- name: '[plug] Downloading plugins using Plug per user'
+- name: "[plug] Downloading plugins using Plug per user"  # noqa: key-order[task]
   ansible.builtin.command:
     cmd: >-
       vim -E -s -V -u {{ vim_root_plugins }} -c "PlugInstall --sync" -c "qa"
-  loop: "{{ vim_users | flatten(levels=1) }}"
-  become: true
-  become_user: "{{ item }}"
   register: vim_plugins_result
   failed_when: vim_plugins_result.rc > 1
   changed_when: >-
@@ -90,11 +89,12 @@
       ) or
       "Installed" in vim_plugins_result.stdout
     }}
+  <<: *vim_users_loop
   when:
     - "'user' in vim_env"
     - vim_users is defined
 
-- name: '[plug] Downloading plugins using Plug system-wide'
+- name: "[plug] Downloading plugins using Plug system-wide"
   ansible.builtin.command:
     cmd: 'vim -E -s -c "source /etc/vim/vimrc" -c PlugInstall -c qa'
   become: true

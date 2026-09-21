@@ -35,13 +35,8 @@ roles:
 Role Variables
 ----
 
-For installing only MPD set mpd_install_mpc and mpd_install_ncmpcpp to 'False'
-
-For installing only ncmpcpp (or mpc) set the corresponding variable to 'True' and
-run the playbook with role specifying tags:
-
-```
-ansible-playbook ./playbook.yml --tags 'mpc,ncmpcpp'
+```bash
+ansible-playbook ./playbook.yml
 ```
 
 OS-Agnostic:
@@ -49,8 +44,6 @@ OS-Agnostic:
 | Variables | Description | Default|
 |-----------|-------------|--------|
 | `mpd_autostart` | Start mpd automatically | `yes` |
-| `mpd_install_mpc` | Install mpc cli client | `yes` |
-| `mpd_install_ncmpcpp` | Install ncmpcpp or not | `yes` |
 | `mpd_users[]` | List of ncmpcpp users | `[drew, root]` |
 | `mpd_port` | Port mpd will run on | `6600` |
 | `mpd_bind_to_address` | IP address on which mpd will listen | <ul><li>Darwin: `~/.mpd/socket` </li><li>Linux: `/var/lib/mpd/socket`</li> see [`defaults/main.yml`](defaults/main.yml)</li></ul> |

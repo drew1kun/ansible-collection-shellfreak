@@ -11,7 +11,7 @@ Ansible role that installs, configures and customizes vim editor.
 The role does the following:
 
  - Removes **vim-tiny**
- - Installs **neovim** or **vim-nox** (required for Powerline plugin) depending on config
+ - Installs **neovim** and **vim-nox** (required for Powerline plugin) depending on config
  - Sets `EDITOR` environment variable to use **neovim** (or **vim-nox** depending on config)
  - Installs [vim-plug][vim-plug-link] or [Vundle][vundle-link] plugin manager depending on config
  - Installs git (as a dependency for Vundle installation)
@@ -75,7 +75,6 @@ Role Variables
 | `vim_cleanup` | remove all vim configuration customizations created by this role | `false` |
 | `vim_env` | Where to install vim: system or user.<br/> If you install it system-wide, all users will use your default configuration. | `users` |
 | `vim_users` | List of users to install vim. Use it in conjunction with `vim_env`. | `user` |
-| `vim_neovim` | Install and configure neovim? | `true` |
 | `vim_colorscheme` | which colorscheme to use? | `mustang` |
 | `vim_plugin_manager` | Which plugin manager to use? Options: vundle (not recommended) or plug | `plug` |
 | `vim_vundle_version` | Vundle version (used only when vim_plugin_manager is set to vundle - not recommended). | `v0.10.2` |
@@ -110,7 +109,6 @@ Play:
       vim_env: users
       vim_plugin_manager: plug
       vim_emoji_git_integration: no
-      vim_neovim: yes
       vim_users: "{{ vim_vault_users }}"
       vim_colorscheme: nord
       vim_plugins: "{{ vim_github_plugins + vim_asyncomplete_plugins }}"

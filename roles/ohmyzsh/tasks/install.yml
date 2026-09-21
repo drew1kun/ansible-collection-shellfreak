@@ -5,6 +5,8 @@
   loop:
     - zsh
     - terraform
+  loop_control:
+    label: "{{ item }}"
   register: ohmyzsh_binaries
   changed_when: false
   failed_when: false
@@ -29,6 +31,8 @@
   register: ohmyzsh_plugins_clone
   until: ohmyzsh_plugins_clone is succeeded
   loop: "{{ ohmyzsh_repos }}"
+  loop_control:
+    label: "{{ item.name }}"
   when: item.install | default(false) | bool
   vars:
     ohmyzsh_repos: >-

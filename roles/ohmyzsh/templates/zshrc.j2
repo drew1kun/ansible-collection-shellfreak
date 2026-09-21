@@ -110,12 +110,12 @@ custom_plugins=(
 
 {% endif %}
 if [[ -f "${HOME}/.zsh/plugins" ]]; then
-    . "${HOME}/.zshrc/plugins"
-    plugins=( ${default_plugins[@]} ${custom_plugins[@]} )
+    . "${HOME}/.zsh/plugins"
+    plugins=( ${default_plugins} ${custom_plugins} )
 elif [[ -d "${ZSH}/custom/plugins" ]]; then
-    plugins=( ${default_plugins[@]} ${custom_plugins[@]} )
+    plugins=( ${default_plugins} ${custom_plugins} )
 else
-    plugins=${default_plugins}
+    plugins=( ${default_plugins} )
 fi
 
 {% set all_custom_plugins = ohmyzsh_custom_plugins | selectattr("install", "equalto", true) | list %}
@@ -131,9 +131,12 @@ if (( ! ${fpath[(I)/usr/local/share/zsh/site-functions]} )); then
 fi
 
 source "${ZSH}/oh-my-zsh.sh"
+
 {% set all_plugins = (ohmyzsh_default_plugins | default([]) + item.plugins | default([])) %}
 {% if 'kubectl' in all_plugins | map(attribute='name') | list %}
-source <(kubectl completion zsh)
+if command -v kubectl &>/dev/null; then
+  source <(kubectl completion zsh)
+fi
 {% endif %}
 
 # Customize to your needs...
@@ -162,10 +165,8 @@ fi
 
 # Load custom configs
 if [ -d "${HOME}/.zsh/conf.d" ]; then
-    for i in "${HOME}/.zsh/conf.d/*.sh"; do
-        if [ -r "${i}" ]; then
-            . "${i}"
-        fi
+    for i in "${HOME}"/.zsh/conf.d/*.sh(N); do
+        [ -r "$i" ] && source "$i"
     done
 fi
 

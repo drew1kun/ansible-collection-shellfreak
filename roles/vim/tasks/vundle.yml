@@ -1,19 +1,22 @@
 ---
-- name: '[vundle] Installing Vundle'
+- name: "[vundle] Installing Vundle"
   ansible.builtin.git:
     repo: https://github.com/gmarik/Vundle.vim.git
     dest: "~/.vim/{{ vim_plugins_dir }}/Vundle.vim"
     version: "{{ vim_vundle_version }}"
-  loop: "{{ vim_users }}"
   become: true
-  become_user: "{{ item }}"
+  become_user: "{{ vim_user }}"
+  loop: "{{ vim_users }}"
+  loop_control:
+    loop_var: vim_user
+    label: "{{ vim_user }}"
   register: vim_vundle_result
   until: vim_vundle_result is succeeded
   when:
     - "'user' in vim_env"
     - vim_users is defined
 
-- name: '[vundle] Installing Vundle'
+- name: "[vundle] Installing Vundle"
   ansible.builtin.git:
     repo: https://github.com/gmarik/Vundle.vim.git
     dest: /var/lib/vim/addons/Vundle.vim
@@ -36,19 +39,22 @@
 # ignore_errors: true
 #
 # For troubleshooting add -V switch to this command and run it directly on the target
-- name: '[vundle] Downloading plugins using Vundle per user'
+- name: "[vundle] Downloading plugins using Vundle per user"
   ansible.builtin.command: 'vim -E -s -c "source ~/.vimrc" -c PluginInstall -c qa'
+  become: true
+  become_user: "{{ vim_user }}"
+  loop: "{{ vim_users }}"
+  loop_control:
+    loop_var: vim_user
+    label: "{{ vim_user }}"
   register: vim_plugins_result
   failed_when: vim_plugins_result.rc > 1
   changed_when: true
-  loop: "{{ vim_users }}"
-  become: true
-  become_user: "{{ item }}"
   when:
     - "'user' in vim_env"
     - vim_users is defined
 
-- name: '[vundle] Downloading plugins using Vundle system-wide'
+- name: "[vundle] Downloading plugins using Vundle system-wide"
   ansible.builtin.command: 'vim -E -s -c "source /etc/vim/vimrc" -c PluginInstall -c qa'
   changed_when: true
   become: true

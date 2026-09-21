@@ -14,8 +14,6 @@ vim_env: user
 vim_users:
   - "{{ ansible_user_id }}"
 
-vim_neovim: true
-
 # mustang, solarized, nord, cipherpunk...
 vim_colorscheme: solarized
 

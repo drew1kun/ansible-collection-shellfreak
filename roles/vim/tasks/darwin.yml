@@ -1,5 +1,5 @@
 ---
-- name: '[Darwin] Make sure vim is installed'
+- name: "[darwin] Make sure vim is installed"
   community.general.homebrew:
     name: vim
     state: present
@@ -7,12 +7,12 @@
   until: vim_install_result is succeeded
   become: false
 
-- name: '[Darwin] Check which SHELL is running'
+- name: "[darwin] Check which SHELL is running"
   ansible.builtin.command: "echo ${SHELL}"
   register: vim_shell
   changed_when: false
 
-- name: '[Darwin] Configure Vim environment variables'
+- name: "[darwin] Configure Vim environment variables"
   ansible.builtin.lineinfile:
     path: &vim_darwin_path >-
       ~/.{{
@@ -23,6 +23,7 @@
     line: "{{ vim_bash_vars.line }}"
   loop_control:
     loop_var: vim_bash_vars
+    label: "{{ vim_bash_vars.line }}"
   loop:
     - regexp: '^.*export\sEDITOR=.*'
       line: 'export EDITOR=vim visudo'

@@ -134,13 +134,6 @@ nnoremap <Leader>b :buffers<CR>:buffer<Space>
 " nnoremap <Leader>b :buffers<CR>:buffer<Space>
 {% endif %}
 "===============================================================================
-{% if not vim_neovim %}
-{# This is a default behavior in NeoVIM #}
-"============================ BACKSPACE BEHAVIOUR ==============================
-set backspace=indent,eol,start      " Allow backspacing over everything in insert mode - NOT NEEDED IN NEOVIM
-set backspace=2                     " Backspace deletes like most editors
-"===============================================================================
-{% endif %}
 "========================= DELETE TRAILING WHITESPACES==========================
 fun! StripTrailingWhitespace()
     " Only strip if the b:noStripeWhitespace variable isn't set
@@ -223,9 +216,6 @@ set showmatch                       " Set show matching parenthesis (NOT NEEDED?
 "================================== RENDERING ==================================
 set nolazyredraw                    " Don't redraw screen while executing macros
 set synmaxcol=125                   " Stop rendering syntax colors in long lines (improves rendering performance)
-{% if not vim_neovim %}
-set ttyscroll=3                     " Improves redraw performance when scroll (DOES NOT WORK IN NEOVIM)
-{% endif %}
 "===============================================================================
 "=================================== BELLS =====================================
 set noerrorbells                    " Don't beep (on errors)

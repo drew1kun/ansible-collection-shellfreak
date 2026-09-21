@@ -29,20 +29,18 @@
 - name: "[main] Include vim installation tasks"
   ansible.builtin.include_tasks:
     file: linux.yml
-    apply:
-      <<: *vim_tags_apply
+    apply: *vim_tags_apply
   when: "not 'Darwin' in ansible_system"
   tags: *vim_tags
 
 - name: "[main] Include vars for {{ vim_env ~ '-wide installation' }}"
-  ansible.builtin.include_vars: "{{ vim_env }}.yml"
+  ansible.builtin.include_vars: "{{ 'users' if 'user' in vim_env else 'system' }}.yml"
   tags: *vim_tags
 
 - name: "[main] Include system configuration tasks"
   ansible.builtin.include_tasks:
     file: system.yml
-    apply:
-      <<: *vim_tags_apply
+    apply: *vim_tags_apply
   when:
     - "'system' in vim_env"
     - "not 'Darwin' in ansible_system"
@@ -51,24 +49,15 @@
 - name: "[main] Include user configuration tasks"
   ansible.builtin.include_tasks:
     file: users.yml
-    apply:
-      <<: *vim_tags_apply
-  when: "'user' in vim_env or 'Darwin' in ansible_system"
+    apply: *vim_tags_apply
+  when:
+    - vim_users is defined
+    - "'user' in vim_env  or ansible_system == 'Darwin'"
   tags: *vim_tags
 
 - name: "[main] Include vim-airline configuration if installing airline"
   ansible.builtin.include_tasks:
     file: airline.yml
-    apply:
-      <<: *vim_tags_apply
-  loop: "{{ vim_plugins | flatten(levels=1) }}"
-  when: item.name == 'vim-airline/vim-airline'
-  tags: *vim_tags
-
-- name: "[main] Include neovim installation tasks"
-  ansible.builtin.include_tasks:
-    file: nvim.yml
-    apply:
-      <<: *vim_tags_apply
-  when: vim_neovim
+    apply: *vim_tags_apply
+  when: "'vim-airline/vim-airline' in (vim_plugins | map(attribute='name') | list)"
   tags: *vim_tags

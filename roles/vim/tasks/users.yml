@@ -1,124 +1,128 @@
 ---
 # Create a directory ~/.vim.local in order not to pollute home directory
-- name: "[users] Create {{ vim_root_cust_conf_dir ~ ' directory for custom configuration content' }}"
+- name: "[users] Create {{ vim_root_cust_conf_dir ~ ' directory for custom configuration content' }}"   # noqa: key-order[task]
   ansible.builtin.file:
     path: "{{ vim_root_conf_plug_dir }}"
     state: directory
     mode: "0755"
-  become: true    # Required for become_user to work
-  become_user: "{{ item }}"
-  loop: "{{ vim_users }}"
+  <<: &vim_users_become_loop
+    become: true    # Required for become_user to work
+    become_user: "{{ vim_user }}"
+    loop: "{{ vim_users }}"
+    loop_control:
+      loop_var: vim_user
+      label: "{{ vim_user }}"
+    when: vim_users is defined
 
-- name: "[users] Generating {{ vim_root_config ~ ' from template' }}"
+- name: "[users] Generate {{ vim_root_config ~ ' from template' }}"   # noqa: key-order[task]
   ansible.builtin.template:
     src: vimrc.j2
     dest: "{{ vim_root_config }}"
-    owner: "{{ item }}"
+    owner: "{{ vim_user }}"
     group: >-
       {{
-        item if not 'Darwin' in ansible_system else
-        'wheel' if item == 'root' else 'staff'
+        vim_user if not 'Darwin' in ansible_system else
+        'wheel' if vim_user == 'root' else 'staff'
       }}
     mode: "0644"
-  loop: "{{ vim_users }}"
-  when: vim_users is defined
-  become: true
-  become_user: "{{ item }}"
+  <<: *vim_users_become_loop
 
-- name: "[users] Symlink {{ vim_root_config ~ ' to ~/.vimrc'}}"
+- name: "[users] Symlink {{ vim_root_config ~ ' to ~/.vimrc'}}"   # noqa: key-order[task]
   ansible.builtin.file:
     src: "{{ vim_root_config }}"
     dest: ~/.vimrc
     state: link
-  loop: "{{ vim_users }}"
-  become: true
-  become_user: "{{ item }}"
-  when: vim_users is defined
+  <<: *vim_users_become_loop
 
-- name: "[users] Generating {{ vim_root_local_config ~ ' from template' }}"
+- name: "[users] Generate {{ vim_root_local_config ~ ' from template' }}"   # noqa: key-order[task]
   ansible.builtin.template:
     src: vimrc.local.j2
     dest: "{{ vim_root_local_config }}"
-    owner: "{{ item }}"
+    owner: "{{ vim_user }}"
     group: >-
       {{
-        item if not 'Darwin' in ansible_system else
-        'wheel' if item == 'root' else 'staff'
+        vim_user if not 'Darwin' in ansible_system else
+        'wheel' if vim_user == 'root' else 'staff'
       }}
     mode: "0644"
-  loop: "{{ vim_users }}"
-  when: vim_users is defined
-  become: true
-  become_user: "{{ item }}"
+  <<: *vim_users_become_loop
 
-- name: "[users] Generating {{ vim_root_plugins ~ ' from template' }}"
+- name: "[users] Generate {{ vim_root_plugins ~ ' from template' }}"  # noqa: key-order[task]
   ansible.builtin.template:
     src: "{{ vim_pm_config }}.j2"
     dest: "{{ vim_root_plugins }}"
-    owner: "{{ item }}"
+    owner: "{{ vim_user }}"
     group: >-
       {{
-        item if not 'Darwin' in ansible_system else
-        'wheel' if item == 'root' else 'staff'
+        vim_user if not 'Darwin' in ansible_system else
+        'wheel' if vim_user == 'root' else 'staff'
       }}
     mode: "0644"
-  loop: "{{ vim_users }}"
-  when: vim_users is defined
-  become: true
-  become_user: "{{ item }}"
+  <<: *vim_users_become_loop
 
 # CONFIGURE PLUGINS
-- name: "[users] Generating the ~/.vim/vim.local/vimrc.<plugin> config files from templates"
+- name: "[users] Generate the ~/.vim/vim.local/vimrc.<plugin> config files from templates"
   ansible.builtin.template:
-    src: "{{ item.1.src }}"
-    dest: "{{ item.1.path }}"
-    owner: "{{ item.0 }}"
+    src: "{{ vim_config.1.src }}"
+    dest: "{{ vim_config.1.path }}"
+    owner: "{{ vim_config.0 }}"
     group: >-
       {{
-        item.0 if not 'Darwin' in ansible_system else
-        'wheel' if item.0 == 'root' else 'staff'
+        vim_config.0 if not 'Darwin' in ansible_system else
+        'wheel' if vim_config.0 == 'root' else 'staff'
       }}
     mode: "0644"
-  with_nested:
-    - "{{ vim_users }}"
-    - "{{ vim_checklist }}"
-    - "{{ vim_plugins }}"
   become: true
-  become_user: "{{ item.0 }}"
+  become_user: "{{ vim_config.0 }}"
+  loop: "{{ vim_users | product(vim_checklist, vim_plugins) | list }}"
+  loop_control:
+    loop_var: vim_config
+    label: "{{ vim_config.0 }}: {{ vim_config.1.name }} / {{ vim_config.2.name }}"
   when:
-    - "vim_users is defined"
-    - "item.1.name in item.2.name"
+    - vim_users is defined
+    - "vim_config.1.name in vim_config.2.name"
 
 # This task causes idempotency issue
-- name: "[users] Copying .vim folder to ~/.vim"
+- name: "[users] Copying .vim folder to ~/.vim"   # noqa: key-order[task]
   ansible.builtin.copy:
     src: vim/
     dest: ~/.vim/
-    owner: "{{ item }}"
+    owner: "{{ vim_user }}"
     group: >-
       {{
-        item if not 'Darwin' in ansible_system else
-        'wheel' if item == 'root' else 'staff'
+        vim_user if not 'Darwin' in ansible_system else
+        'wheel' if vim_user == 'root' else 'staff'
       }}
     directory_mode: "0755"
     mode: "0644"
-  loop: "{{ vim_users }}"
-  when: vim_users is defined
-  become: true
-  become_user: "{{ item }}"
+  <<: *vim_users_become_loop
+
+# - name: "[users] Download en.utf-8.spl spell file from ftp"
+#   ansible.builtin.get_url:
+#     url: ftp://ftp.vim.org/pub/vim/runtime/spell/en.utf-8.spl
+#     dest: ~/.vim/spell/en.utf-8.spl
+#     owner: "{{ vim_user }}"
+#     group: "{{ vim_user if not 'Darwin' in ansible_system else 'wheel' if vim_user == 'root' else 'staff' }}"
+#     mode: "0644"
+#   register: vim_spell_result
+#   until: vim_spell_result is succeeded
+#   <<: *vim_users_become_loop
 
 - name: "[users] Set EDITOR and TERM environment variables"
   ansible.builtin.blockinfile:
     path: ~/.zshrc
-    owner: "{{ item }}"
-    group: "{{ item }}"
+    owner: "{{ vim_user }}"
+    group: "{{ vim_user }}"
     content: |
       export EDITOR="/usr/bin/vim"
       export TERM="xterm-256color"  # For vim colors in tmux
     marker: "# {mark} ======== VIM role: Ansible managed block ========="
-  become: true
-  become_user: "{{ item }}"
+  become: true    # Required for become_user to work
+  become_user: "{{ vim_user }}"
   loop: "{{ vim_users }}"
+  loop_control:
+    loop_var: vim_user
+    label: "{{ vim_user }}"
   when: "not 'Darwin' in ansible_system"
 
 - name: "[users] Include {{ vim_plugin_manager ~ ' plugin manager and plugins installation tasks' }}"
@@ -129,3 +133,26 @@
         - always
   tags:
     - always
+
+- name: "[nvim] Create user-wide Neovim configuration"
+  ansible.builtin.file:
+    src: "{{ item.1.src }}"
+    dest: "{{ item.1.dest }}"
+    state: link
+  loop: >-
+    {{
+      vim_users
+      | product([
+          {
+            'src': vim_root_dir,
+            'dest': '~/.config/nvim'
+          },
+          {
+            'src': vim_root_config,
+            'dest': '~/.config/nvim/init.vim'
+          }
+        ])
+      | list
+    }}
+  tags:
+    - vim_neovim

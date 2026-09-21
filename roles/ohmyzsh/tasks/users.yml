@@ -3,14 +3,16 @@
   ansible.builtin.file:
     path: "{{ ohmyzsh_cache_dir }}"
     state: directory
-    mode: "0644"
+    mode: "0755"
     owner: "{{ item.user }}"
     group: "{{ 'wheel' if item.user == 'root' else 'staff' }}"
-  when:
-    - "item.state is not defined or 'present'in item.state"
-    - "'Darwin' in ansible_os_family"
-  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
   become: true
+  when:
+    - item.state is not defined or 'present' in item.state
+    - ansible_system == 'Darwin'
+  loop: "{{ ohmyzsh_users }}"
+  loop_control:
+    label: "{{ item.user }}"
   tags: &ohmyzsh_tags
     - ohmyzsh
 
@@ -27,17 +29,20 @@
     owner: "{{ item.user }}"
     group: >-
       {{
-        item.user if 'Darwin' not in ansible_os_family else
+        item.user if ansible_system != 'Darwin' else
         'wheel' if item.user == 'root' else
         'staff'
       }}
-  when: "item.state is not defined or 'present'in item.state"
-  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
-  become: "{{ item.user == 'root' or item.user != ansible_user_id }}"
+  when:
+    - item.state is not defined or 'present' in item.state
+  loop: "{{ ohmyzsh_users }}"
+  loop_control:
+    label: "{{ item.user }}"
+  become: "{{ item.user != ansible_user_id }}"
   become_user: "{{ item.user if item.user != 'root' else omit }}"
   tags: *ohmyzsh_tags
 
-- name: '[users] Create directory structure'
+- name: '[users] Create .zsh directory structure'
   ansible.builtin.file:
     path: >-
       {{
@@ -45,16 +50,20 @@
         ohmyzsh_home_dir ~ item.user
       }}/.zsh
     state: directory
-    recurse: true
+    #recurse: true
+    mode: "0755"
     owner: "{{ item.user }}"
     group: >-
       {{
-        item.user if 'Darwin' not in ansible_os_family else
+        item.user if ansible_system != 'Darwin' else
         'wheel' if item.user == 'root' else
         'staff'
       }}
-  when: "item.state is not defined or 'present'in item.state"
-  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
+  when:
+    - item.state is not defined or 'present' in item.state
+  loop: "{{ ohmyzsh_users }}"
+  loop_control:
+    label: "{{ item.user }}"
   become: true
   tags: *ohmyzsh_tags
 
@@ -70,12 +79,15 @@
     owner: "{{ item.user }}"
     group: >-
       {{
-        item.user if 'Darwin' not in ansible_os_family else
+        item.user if ansible_system != 'Darwin' else
         'wheel' if item.user == 'root' else
         'staff'
       }}
-  when: "item.state is not defined or 'present'in item.state"
-  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
+  when:
+    - item.state is not defined or 'present' in item.state
+  loop: "{{ ohmyzsh_users }}"
+  loop_control:
+    label: "{{ item.user }}"
   become: true
   tags: *ohmyzsh_tags
 
@@ -91,12 +103,15 @@
     owner: "{{ item.user }}"
     group: >-
       {{
-        item.user if 'Darwin' not in ansible_os_family else
+        item.user if ansible_system != 'Darwin' else
         'wheel' if item.user == 'root' else
         'staff'
       }}
-  when: "item.state is not defined or 'present'in item.state"
-  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
+  when:
+    - item.state is not defined or 'present' in item.state
+  loop: "{{ ohmyzsh_users }}"
+  loop_control:
+    label: "{{ item.user }}"
   become: true
   tags: *ohmyzsh_tags
 
@@ -105,45 +120,56 @@
   ansible.builtin.copy:
     src: omz_powerlevel9k.cfg
     dest: >-
-      {{ ohmyzsh_root_dir if item.user == 'root' else
+      {{
+        ohmyzsh_root_dir if item.user == 'root' else
         ohmyzsh_home_dir ~ item.user
-      }}/.zsh/
+      }}/.zsh/omz_powerlevel9k.cfg
     mode: "0644"
     owner: "{{ item.user }}"
     group: >-
       {{
-        item.user if 'Darwin' not in ansible_os_family else
+        item.user if ansible_system != 'Darwin' else
         'wheel' if item.user == 'root' else
         'staff'
       }}
   when:
-    - "item.state is not defined or 'present'in item.state"
-    - "'powerlevel9k' in item.theme"
-    - (ohmyzsh_themes
+    - item.state is not defined or 'present' in item.state
+    - "'powerlevel9k' in (item.theme | default([]))"
+    - >-
+      ohmyzsh_themes
       | selectattr('name', 'equalto', 'powerlevel9k')
       | map(attribute='install')
       | list
       | first
-      | default(false))
-  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
+      | default(false)
+      | bool
+  loop: "{{ ohmyzsh_users }}"
+  loop_control:
+    label: "{{ item.user }}"
   become: true
   tags: *ohmyzsh_tags
 
-- name: '[users] Add custom sudoers config to not reset environment variables when doing `sudo -s` for each zsh user'
+- name: '[users] Add custom sudoers config for zsh users'
   ansible.builtin.template:
     src: sudoers.d/user.j2
     dest: "/etc/sudoers.d/{{ item.user }}"
     mode: "0440"
     owner: root
-    group: "{{ 'root' if 'Darwin' not in ansible_os_family else 'wheel' }}"
+    group: "{{ 'root' if ansible_system != 'Darwin' else 'wheel' }}"
+    validate: "/usr/sbin/visudo -cf %s"
   when:
-    - (ohmyzsh_themes
+    - item.state is not defined or 'present' in item.state
+    - >-
+      ohmyzsh_themes
       | selectattr('name', 'equalto', 'powerlevel9k')
       | map(attribute='install')
       | list
       | first
-      | default(false))
-  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
+      | default(false)
+      | bool
+  loop: "{{ ohmyzsh_users }}"
+  loop_control:
+    label: "{{ item.user }}"
   become: true
   tags: *ohmyzsh_tags
 
@@ -160,21 +186,25 @@
     owner: "{{ item.user }}"
     group: >-
       {{
-        item.user if 'Darwin' not in ansible_os_family else
+        item.user if ansible_system != 'Darwin' else
         'wheel' if item.user == 'root' else
         'staff'
       }}
   when:
-    - "item.state is not defined or 'present'in item.state"
-    - ohmyzsh_powerlevel10k_import_config
-    - "'powerlevel10k' in item.theme"
-    - (ohmyzsh_themes
+    - item.state is not defined or 'present' in item.state
+    - ohmyzsh_powerlevel10k_import_config | bool
+    - "'powerlevel10k' in (item.theme | default([]))"
+    - >-
+      ohmyzsh_themes
       | selectattr('name', 'equalto', 'powerlevel10k')
       | map(attribute='install')
       | list
       | first
-      | default(false))
-  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
+      | default(false)
+      | bool
+  loop: "{{ ohmyzsh_users }}"
+  loop_control:
+    label: "{{ item.user }}"
   become: true
   tags: *ohmyzsh_tags
 
@@ -183,8 +213,11 @@
   ansible.builtin.user:
     name: "{{ item.user }}"
     shell: /bin/zsh
-  when: "item.state is not defined or 'present'in item.state"
-  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
+  when:
+    - item.state is not defined or 'present' in item.state
+  loop: "{{ ohmyzsh_users }}"
+  loop_control:
+    label: "{{ item.user }}"
   become: true
   tags: *ohmyzsh_tags
 
@@ -195,6 +228,8 @@
   when:
     - item.state is defined
     - "'absent' in item.state"
-  loop: "{{ ohmyzsh_users | flatten(levels=1) }}"
+  loop: "{{ ohmyzsh_users }}"
+  loop_control:
+    label: "{{ item.user }}"
   become: true
   tags: *ohmyzsh_tags
