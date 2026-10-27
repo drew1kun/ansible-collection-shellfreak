@@ -1,14 +1,19 @@
 ---
+# This dir has to be writable. Mainly for macos, as /usr/ is read-only:
 - name: '[users] Create ohmyzsh cache directory on Darwin'
   ansible.builtin.file:
-    path: "{{ ohmyzsh_cache_dir }}"
+    path: >-
+      {{
+        ohmyzsh_root_dir if item.user == 'root' else
+        ohmyzsh_home_dir ~ item.user
+      }}/.ohmyzsh_cache
     state: directory
     mode: "0755"
     owner: "{{ item.user }}"
     group: "{{ 'wheel' if item.user == 'root' else 'staff' }}"
   become: true
   when:
-    - item.state is not defined or 'present' in item.state
+    - item.state | default('present') == 'present'
     - ansible_system == 'Darwin'
   loop: "{{ ohmyzsh_users }}"
   loop_control:
@@ -16,103 +21,67 @@
   tags: &ohmyzsh_tags
     - ohmyzsh
 
-- name: '[users] Generate default zshrc in user home directory'
-  ansible.builtin.template:
-    src: zshrc.j2
-    dest: >-
-      {{
-        ohmyzsh_root_dir if item.user == 'root' else
-        ohmyzsh_home_dir ~ item.user
-      }}/.zshrc
-    force: true
-    mode: "0644"
-    owner: "{{ item.user }}"
-    group: >-
-      {{
-        item.user if ansible_system != 'Darwin' else
-        'wheel' if item.user == 'root' else
-        'staff'
-      }}
-  when:
-    - item.state is not defined or 'present' in item.state
-  loop: "{{ ohmyzsh_users }}"
-  loop_control:
-    label: "{{ item.user }}"
-  become: "{{ item.user != ansible_user_id }}"
-  become_user: "{{ item.user if item.user != 'root' else omit }}"
-  tags: *ohmyzsh_tags
-
 - name: '[users] Create .zsh directory structure'
   ansible.builtin.file:
     path: >-
       {{
-        ohmyzsh_root_dir if item.user == 'root' else
-        ohmyzsh_home_dir ~ item.user
-      }}/.zsh
+        ohmyzsh_root_dir if item.0.user == 'root' else
+        ohmyzsh_home_dir ~ item.0.user
+      }}/{{ item.1 }}
     state: directory
-    #recurse: true
     mode: "0755"
-    owner: "{{ item.user }}"
+    owner: "{{ item.0.user }}"
     group: >-
       {{
-        item.user if ansible_system != 'Darwin' else
-        'wheel' if item.user == 'root' else
+        item.0.user if ansible_system != 'Darwin' else
+        'wheel' if item.0.user == 'root' else
         'staff'
       }}
   when:
-    - item.state is not defined or 'present' in item.state
-  loop: "{{ ohmyzsh_users }}"
+    - item.0.state | default('present') == 'present'
+  loop: "{{ ohmyzsh_users | product(['.zsh', '.zsh/conf.d']) | list }}"
   loop_control:
-    label: "{{ item.user }}"
+    label: "{{ item.0.user }} -> {{ item.1 }}"
   become: true
   tags: *ohmyzsh_tags
 
-- name: '[users] Generate default aliases'
+- name: '[users] Generate zsh configuration files'
   ansible.builtin.template:
-    src: zsh/aliases.j2
+    src: "{{ config.1.src }}"
     dest: >-
       {{
-        ohmyzsh_root_dir if item.user == 'root' else
-        ohmyzsh_home_dir ~ item.user
-      }}/.zsh/aliases
+        ohmyzsh_root_dir if config.0.user == 'root' else
+        ohmyzsh_home_dir ~ config.0.user
+      }}/{{ config.1.dest }}
+    force: true
     mode: "0644"
-    owner: "{{ item.user }}"
+    owner: "{{ config.0.user }}"
     group: >-
       {{
-        item.user if ansible_system != 'Darwin' else
-        'wheel' if item.user == 'root' else
+        config.0.user if ansible_system != 'Darwin' else
+        'wheel' if config.0.user == 'root' else
         'staff'
       }}
   when:
-    - item.state is not defined or 'present' in item.state
-  loop: "{{ ohmyzsh_users }}"
+    - config.0.state | default('present') == 'present'
+    - config.1.os | default(ansible_system) == ansible_system
+  loop: "{{ ohmyzsh_users | product(ohmyzsh_templates) | list }}"
   loop_control:
-    label: "{{ item.user }}"
+    loop_var: config
+    label: "{{ config.0.user }} -> {{ config.1.dest }}"
   become: true
-  tags: *ohmyzsh_tags
-
-- name: '[users] Generate custom aliases'
-  ansible.builtin.template:
-    src: zsh/aliases.local.j2
-    dest: >-
-      {{
-        ohmyzsh_root_dir if item.user == 'root' else
-        ohmyzsh_home_dir ~ item.user
-      }}/.zsh/aliases.local
-    mode: "0644"
-    owner: "{{ item.user }}"
-    group: >-
-      {{
-        item.user if ansible_system != 'Darwin' else
-        'wheel' if item.user == 'root' else
-        'staff'
-      }}
-  when:
-    - item.state is not defined or 'present' in item.state
-  loop: "{{ ohmyzsh_users }}"
-  loop_control:
-    label: "{{ item.user }}"
-  become: true
+  vars:
+    item: "{{ config.0 }}"  # just a trick for using {{ item }} in zshrc.j2 template.
+    ohmyzsh_templates:
+      - src: zshrc.j2
+        dest: .zshrc
+      - src: aliases.zsh.j2
+        dest: .zsh/conf.d/aliases.zsh
+      - src: aliases.local.zsh.j2
+        dest: .zsh/conf.d/aliases.local.zsh
+      - src: macos-brew-dnscrypt-fix.zsh.j2
+        dest: .zsh/conf.d/macos-brew-dnscrypt-fix.zsh
+        os: Darwin
   tags: *ohmyzsh_tags
 
 # Powerlevel9k
@@ -133,37 +102,12 @@
         'staff'
       }}
   when:
-    - item.state is not defined or 'present' in item.state
-    - "'powerlevel9k' in (item.theme | default([]))"
+    - item.state | default('present') == 'present'
+    - item.theme | default('') | regex_search('^powerlevel9k(/|$)') is not none
     - >-
       ohmyzsh_themes
       | selectattr('name', 'equalto', 'powerlevel9k')
       | map(attribute='install')
-      | list
-      | first
-      | default(false)
-      | bool
-  loop: "{{ ohmyzsh_users }}"
-  loop_control:
-    label: "{{ item.user }}"
-  become: true
-  tags: *ohmyzsh_tags
-
-- name: '[users] Add custom sudoers config for zsh users'
-  ansible.builtin.template:
-    src: sudoers.d/user.j2
-    dest: "/etc/sudoers.d/{{ item.user }}"
-    mode: "0440"
-    owner: root
-    group: "{{ 'root' if ansible_system != 'Darwin' else 'wheel' }}"
-    validate: "/usr/sbin/visudo -cf %s"
-  when:
-    - item.state is not defined or 'present' in item.state
-    - >-
-      ohmyzsh_themes
-      | selectattr('name', 'equalto', 'powerlevel9k')
-      | map(attribute='install')
-      | list
       | first
       | default(false)
       | bool
@@ -191,14 +135,37 @@
         'staff'
       }}
   when:
-    - item.state is not defined or 'present' in item.state
+    - item.state | default('present') == 'present'
     - ohmyzsh_powerlevel10k_import_config | bool
-    - "'powerlevel10k' in (item.theme | default([]))"
+    - item.theme | default('') | regex_search('^powerlevel10k(/|$)') is not none
     - >-
       ohmyzsh_themes
       | selectattr('name', 'equalto', 'powerlevel10k')
       | map(attribute='install')
-      | list
+      | first
+      | default(false)
+      | bool
+  loop: "{{ ohmyzsh_users }}"
+  loop_control:
+    label: "{{ item.user }}"
+  become: true
+  tags: *ohmyzsh_tags
+
+- name: '[users] Add custom sudoers config for zsh users'
+  ansible.builtin.template:
+    src: sudoers.d/user.j2
+    dest: "/etc/sudoers.d/{{ item.user }}"
+    mode: "0440"
+    owner: root
+    group: "{{ 'root' if ansible_system != 'Darwin' else 'wheel' }}"
+    validate: "/usr/sbin/visudo -cf %s"
+  when:
+    - item.state | default('present') == 'present'
+    - item.theme | default('') | regex_search('^(powerlevel9k|powerlevel10k)(/|$)') is not none
+    - >-
+      ohmyzsh_themes
+      | selectattr('name', 'equalto', (item.theme | default('')).split('/')[0])
+      | map(attribute='install')
       | first
       | default(false)
       | bool
@@ -214,7 +181,7 @@
     name: "{{ item.user }}"
     shell: /bin/zsh
   when:
-    - item.state is not defined or 'present' in item.state
+    - item.state | default('present') == 'present'
   loop: "{{ ohmyzsh_users }}"
   loop_control:
     label: "{{ item.user }}"
@@ -226,8 +193,7 @@
     name: "{{ item.user }}"
     shell: /bin/bash
   when:
-    - item.state is defined
-    - "'absent' in item.state"
+    - item.state | default('present') == 'absent'
   loop: "{{ ohmyzsh_users }}"
   loop_control:
     label: "{{ item.user }}"

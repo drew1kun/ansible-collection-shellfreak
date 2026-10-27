@@ -1,8 +1,5 @@
 ---
-# On MacOS /usr/ is read-only, do not install to /usr/local/share/ohmyzsh:
-ohmyzsh_install_dir: /usr/local/share/ohmyzsh # Alternatively, use ${HOME}/ohmyzsh
-ohmyzsh_cache_dir: ${HOME}/.ohmyzsh_cache       # This dir has to be writable. Mainly for macos, as /usr/ is read-only
-ohmyzsh_custom_aliases: ${HOME}/.zsh/aliases.local
+ohmyzsh_install_dir: /usr/local/share/ohmyzsh   # Alternatively, use ${HOME}/ohmyzsh
 ohmyzsh_repo:
   - name: ohmyzsh
     repo: https://github.com/ohmyzsh/ohmyzsh.git
@@ -13,7 +10,7 @@ ohmyzsh_repo:
 # If both p9k and p10k are set to true, then p10k will be used but the p9k style will be sourced.
 # If installed both, but want to turn p9k off, then comment the following line in ~/.zshrc:
 #   source ${HOME}/.zsh/omz_powerlevel9k.cfg
-ohmyzsh_powerlevel10k_import_config: false
+ohmyzsh_powerlevel10k_import_config: true
 ohmyzsh_powerlevel9k_cfg: ${HOME}/.zsh/omz_powerlevel9k.cfg
 ohmyzsh_default_theme: 'robbyrussell'     # default fallback theme
 ohmyzsh_themes:

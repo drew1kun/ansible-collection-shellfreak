@@ -1,0 +1,47 @@
+#!/usr/bin/env zsh
+
+dnscrypt-fix() {
+  emulate -L zsh
+
+  local prefix="/opt/homebrew"
+  local owner keg link_path
+  local -a kegs
+
+  owner="$(/usr/bin/id -un)" || return 1
+
+  # Find installed dnscrypt-proxy versions.
+  kegs=("${prefix}"/Cellar/dnscrypt-proxy/*(N/))
+
+  if (( ${{ '{' }}#kegs} == 0 )); then
+    print -u2 "No dnscrypt-proxy keg found."
+    return 1
+  fi
+
+  # Require the daemon to be stopped.
+  if /usr/bin/pgrep -x dnscrypt-proxy >/dev/null; then
+    print -u2 "Stop dnscrypt-proxy first with: sudo brew services stop dnscrypt-proxy"
+    return 1
+  fi
+
+  # Restore ownership of installed kegs.
+  for keg in "${kegs[@]}"; do
+    sudo /usr/sbin/chown -R "${owner}:admin" "$keg" || return 1
+  done
+
+  # Restore ownership of Homebrew symlinks.
+  for link_path in \
+    "${prefix}/opt/dnscrypt-proxy" \
+    "${prefix}/var/homebrew/linked/dnscrypt-proxy"
+  do
+    if [[ -L "$link_path" ]]; then
+      sudo /usr/sbin/chown -h "${owner}:admin" \
+        "$link_path" || return 1
+    fi
+  done
+
+  # Restore ownership of the formula directory.
+  sudo /usr/sbin/chown "${owner}:admin" \
+    "${prefix}/Cellar/dnscrypt-proxy" || return 1
+
+  print "dnscrypt-proxy ownership restored."
+}

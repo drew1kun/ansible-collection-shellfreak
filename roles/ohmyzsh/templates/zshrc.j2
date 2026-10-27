@@ -1,199 +1,181 @@
 # This file is managed by Ansible, all changes will be lost
 
-{% if ohmyzsh_setup_tmux|default(false) %}
-# Automatically start tmux when starting new shell
-{% if 'tmux' in (ohmyzsh_default_plugins|default([])|map(attribute='name')|list + item.plugins|default([])|list) %}
-ZSH_TMUX_AUTOSTART=false  # true - will start tmux automatically ATTACHED TO CURRENT SESSION!
-{% endif %}
-# Only start tmux if not already in tmux and on an interactive shell
-# If encountering any issues with tmux first line remedy to try:
-#   tmux kill-server 2>/dev/null
-if [[ -z "$TMUX" && -z "$SSH_TTY" && -n "$PS1" && -t 0 && -t 1 ]]; then
-    tmux
-fi
+{# Prepare plugin and theme configuration #}
+{% set default_plugin_names = (
+  (ohmyzsh_default_plugins | default([])) +
+  (item.plugins | default([]))
+) | map(attribute='name') | list %}
 
+{% set custom_plugin_names = [] %}
+{% for plugin in ohmyzsh_custom_plugins | default([]) %}
+{% if plugin.install | default(true) %}
+{% set _ = custom_plugin_names.append(plugin.name) %}
 {% endif %}
+{% endfor %}
 
-# Path to your oh-my-zsh configuration.
+{% set selected_theme = item.theme | default(ohmyzsh_default_theme) %}
+{% set theme_name = selected_theme.split('/')[0] %}
+{% set theme_config = ohmyzsh_themes | default([])
+  | selectattr('name', 'equalto', theme_name)
+  | list %}
+{% set theme_available = (
+  theme_config | length == 0 or
+  theme_config[0].install | default(false) | bool
+) %}
+
+# ------------------------------------------------------------
+# Environment and executable paths
+# ------------------------------------------------------------
+
 ZSH="{{ ohmyzsh_install_dir }}"
 
-# Disable odd message regading completions on mac when doing 'sudo su'
-ZSH_DISABLE_COMPFIX=true
+# Keep PATH entries unique
+typeset -U path PATH
 
-{% if 'Darwin' in ansible_os_family %}
-# Specify custom ohmyzsh cache, because on mac /usr/ dir is read-only:
-ZSH_CACHE_DIR="{{ ohmyzsh_cache_dir }}"
+{% if ansible_system == 'Darwin' %}
+# Homebrew binaries and optional package directories
+export PATH="{{ ohmyzsh_brew_prefix.stdout }}/bin:{{ ohmyzsh_brew_prefix.stdout }}/sbin:${PATH}"
+
+if [[ -d "{{ ohmyzsh_brew_prefix.stdout }}/opt/libpq/bin" ]]; then
+    path=("{{ ohmyzsh_brew_prefix.stdout }}/opt/libpq/bin" "${path[@]}")
+fi
+
+if [[ -d "{{ ohmyzsh_brew_prefix.stdout }}/opt/openvpn/sbin" ]]; then
+    path=("{{ ohmyzsh_brew_prefix.stdout }}/opt/openvpn/sbin" "${path[@]}")
+fi
+
+export ZSH_CACHE_DIR="${HOME}/.ohmyzsh_cache"
 {% endif %}
 
-# Colorize output
+# User-installed executables
+export PATH="${PATH}:${HOME}/.krew/bin"
+export PATH="${PATH}:${HOME}/.rbenv/bin:${HOME}/.rbenv/shims"
+export PATH="${PATH}:${HOME}/.cargo/bin"
+export PATH="${PATH}:${HOME}/.local/bin:${HOME}/bin"
+
+# Editor and locale
+export EDITOR=vim
+export VISUAL=vim
+export LC_CTYPE="en_US.UTF-8"
+export LANG="en_US.UTF-8"
+
+# Terminal settings
 export CLICOLOR=1
 export LSCOLORS=ExFxBxDxCxegedabagacad
 
-# For Solarized
-export TERM="xterm-256color"
-
-# Set name of the theme to load.
-# Look in ~/.oh-my-zsh/themes/
-# Optionally, if you set this to "random", it'll load a random theme each
-# time that oh-my-zsh is loaded.
-# ZSH_THEME="random"
-
-ZSH_THEME="{{
-  item.theme
-  if item.theme is defined and (
-    ('powerlevel9k/powerlevel9k' in item.theme and
-     (ohmyzsh_themes | selectattr('name', 'equalto', 'powerlevel9k') | map(attribute='install') | list | first | default(false)))
-    or
-    ('powerlevel10k/powerlevel10k' in item.theme and
-     (ohmyzsh_themes | selectattr('name', 'equalto', 'powerlevel10k') | map(attribute='install') | list | first | default(false)))
-  )
-  else ohmyzsh_default_theme
-}}"
-
-{% if (ohmyzsh_themes | selectattr('name', 'equalto', 'powerlevel9k')
-  | map(attribute='install') | list | first | default(false)) %}
-{% if item.theme is defined and item.theme == 'powerlevel9k/powerlevel9k' %}
-source "{{ ohmyzsh_powerlevel9k_cfg }}"
-
-{% endif %}
-{% endif %}
-{% if (ohmyzsh_themes | selectattr('name', 'equalto', 'powerlevel10k')
-  | map(attribute='install') | list | first | default(false)) %}
-{% if item.theme is defined and item.theme == 'powerlevel10k/powerlevel10k' %}
-# Source the existing p10k config (if it exists)
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
-{% endif %}
-{% endif %}
-# Set to this to use case-sensitive completion
-# CASE_SENSITIVE="true"
-
-# Comment this out to disable bi-weekly auto-update checks
-#DISABLE_AUTO_UPDATE="true"
-
-# Uncomment to change how many often would you like to wait before auto-updates occur? (in days)
-# export UPDATE_ZSH_DAYS=13
-
-# Uncomment following line if you want to disable colors in ls
-# DISABLE_LS_COLORS="true"
-
-# Uncomment following line if you want to disable autosetting terminal title.
-# DISABLE_AUTO_TITLE="true"
-
-# Uncomment following line if you want red dots to be displayed while waiting for completion
-# COMPLETION_WAITING_DOTS="true"
-
-{% if item is defined and (item.ssh_ids|default([])|length>0) %}
-# SSH ids
-zstyle :omz:plugins:ssh-agent agent-forwarding on
-zstyle :omz:plugins:ssh-agent identities {{ item.ssh_ids|join(' ') }}
-
+{% if ansible_system == 'Darwin' %}
+# XQuartz: preserve DISPLAY when provided by SSH or the terminal
+export DISPLAY="${DISPLAY:-:0}"
 {% endif %}
 
-# Which plugins would you like to load? (plugins can be found in ~/.oh-my-zsh/plugins/*)
-# Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
-# Example format:count plugins=(rails git textmate ruby lighthouse)
-{% if ohmyzsh_default_plugins is defined or (item is defined and item.plugins is defined) %}
-default_plugins=(
-{% for plugin in (ohmyzsh_default_plugins | default([]) + item.plugins | default([])) %}
-    {{ plugin.name }}
-{% endfor %}
-)
+# Timezone for SSH sessions
+export TZ="{{ control_host_tz }}"
 
-{% endif %}
-{% if ohmyzsh_custom_plugins is defined %}
-custom_plugins=(
-{% for plugin in ohmyzsh_custom_plugins if plugin.install | default(true) %}
-    {{ plugin.name }}
-{% endfor %}
-)
-
-{% endif %}
-if [[ -f "${HOME}/.zsh/plugins" ]]; then
-    . "${HOME}/.zsh/plugins"
-    plugins=( ${default_plugins} ${custom_plugins} )
-elif [[ -d "${ZSH}/custom/plugins" ]]; then
-    plugins=( ${default_plugins} ${custom_plugins} )
-else
-    plugins=( ${default_plugins} )
+# GPG terminal
+if [[ -t 0 ]]; then
+  export GPG_TTY="$(tty)"
 fi
 
-{% set all_custom_plugins = ohmyzsh_custom_plugins | selectattr("install", "equalto", true) | list %}
-{% set all_custom_plugin_names = all_custom_plugins | map(attribute='name') | list %}
+# ------------------------------------------------------------
+# Oh My Zsh settings (must precede initialization)
+# ------------------------------------------------------------
 
-{% if 'zsh-syntax-highlighting' in all_custom_plugin_names %}
-# Make zsh look like fish:
+# Disable completion permission warnings
+ZSH_DISABLE_COMPFIX=true
+
+# Theme selection
+ZSH_THEME="{{ selected_theme if theme_available else ohmyzsh_default_theme }}"
+
+# Powerlevel9k configuration
+{% if theme_available and theme_name == 'powerlevel9k' %}
+[[ -f "{{ ohmyzsh_powerlevel9k_cfg }}" ]] && source "{{ ohmyzsh_powerlevel9k_cfg }}"
+{% endif %}
+
+# SSH agent identities
+{% if item.ssh_ids | default([]) | length > 0 %}
+zstyle :omz:plugins:ssh-agent agent-forwarding on
+zstyle :omz:plugins:ssh-agent identities {{ item.ssh_ids | join(' ') }}
+{% endif %}
+
+# Enabled plugins
+default_plugins=(
+{% for plugin in default_plugin_names %}
+  {{ plugin }}
+{% endfor %}
+)
+
+custom_plugins=(
+{% for plugin in custom_plugin_names %}
+  {{ plugin }}
+{% endfor %}
+)
+
+# Load additional user plugin configuration if present
+if [[ -f "${HOME}/.zsh/plugins" ]]; then
+  source "${HOME}/.zsh/plugins"
+fi
+
+plugins=( ${default_plugins} ${custom_plugins} )
+
+# Autosuggestions appearance
+{% if 'zsh-autosuggestions' in custom_plugin_names %}
 export ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE='fg=white'
 {% endif %}
 
-if (( ! ${fpath[(I)/usr/local/share/zsh/site-functions]} )); then
-  FPATH=/usr/local/share/zsh/site-functions:${FPATH}
+{% if ansible_system == 'Darwin' %}
+# Homebrew Zsh completions
+brew_completions="{{ ohmyzsh_brew_prefix.stdout }}/share/zsh/site-functions"
+
+if [[ -d "${brew_completions}" ]] && (( ${fpath[(Ie)$brew_completions]} == 0 )); then
+    fpath=("${brew_completions}" "${fpath[@]}")
 fi
+
+unset brew_completions
+{% endif %}
+
+{% if ohmyzsh_setup_tmux | default(false) and 'tmux' in default_plugin_names %}
+ZSH_TMUX_AUTOSTART=false
+{% endif %}
+
+# ------------------------------------------------------------
+# Initialize Oh My Zsh
+# ------------------------------------------------------------
 
 source "${ZSH}/oh-my-zsh.sh"
 
-{% set all_plugins = (ohmyzsh_default_plugins | default([]) + item.plugins | default([])) %}
-{% if 'kubectl' in all_plugins | map(attribute='name') | list %}
-if command -v kubectl &>/dev/null; then
-  source <(kubectl completion zsh)
-fi
+# ------------------------------------------------------------
+# Theme configuration (after initialization)
+# ------------------------------------------------------------
+
+{% if theme_available and theme_name == 'powerlevel10k' and (ohmyzsh_powerlevel10k_import_config | bool) %}
+# Load Powerlevel10k configuration
+[[ -f "${HOME}/.p10k.zsh" ]] && source "${HOME}/.p10k.zsh"
 {% endif %}
 
-# Customize to your needs...
-{% if 'Darwin' in ansible_os_family %}
-export PATH="{{ ohmyzsh_brew_prefix.stdout }}/bin:${PATH}"                         # Binaries installed with Homebrew
-export PATH="$(brew --prefix)/sbin:${PATH}"                     # Sys Binaries installed with Homebrew
-export PATH="$(brew --prefix)/opt/libpq/bin:${PATH}"            # libpq binaries
-export PATH="$(brew --prefix openvpn)/sbin:${PATH}"             # Brew installed openvpn bins
-{% endif %}
-export PATH="${PATH}:${HOME}/.krew/bin"                         # Krew: installed binaries
-export PATH="${PATH}:${HOME}/.rbenv/bin:${HOME}/.rbenv/shims"   # Rbenv: managing ruby versions
-export PATH="${PATH}:${HOME}/.cargo/bin"                        # Cargo: installed crates
-export PATH="${PATH}:${HOME}/.local/bin:${HOME}/bin"            # User-wide installed binaries
-export GPG_TTY=$(tty)
-export EDITOR=vim
-export VISUAL=vim
-export SHELL="{{ (ohmyzsh_binaries.results|items2dict(key_name='item', value_name='stdout')).zsh }}"
-export LC_TYPE="en_US.UTF-8"
-export LANG="en_US.UTF-8"
-export DISPLAY=:0   # for X11 Forwarding (XQuartz utility on mac) to work with iTerm2
+# ------------------------------------------------------------
+# Custom shell configuration
+# ------------------------------------------------------------
 
-# Load aliases
-if [ -f "${HOME}/.zsh/aliases" ]; then
-    source "${HOME}/.zsh/aliases"
+# Load custom aliases, functions and configuration
+if [[ -d "${HOME}/.zsh/conf.d" ]]; then
+  for config in "${HOME}"/.zsh/conf.d/*.zsh(N); do
+    [[ -r "$config" ]] && source "$config"
+  done
 fi
 
-# Load custom configs
-if [ -d "${HOME}/.zsh/conf.d" ]; then
-    for i in "${HOME}"/.zsh/conf.d/*.sh(N); do
-        [ -r "$i" ] && source "$i"
-    done
+# Rails environment variables
+[[ -f "${HOME}/.rails.env" ]] && source "${HOME}/.rails.env"
+
+# fzf configuration
+[[ -f "${HOME}/.fzf.zsh" ]] && source "${HOME}/.fzf.zsh"
+
+# ------------------------------------------------------------
+# Optional tmux autostart (after shell initialization)
+# ------------------------------------------------------------
+
+{% if ohmyzsh_setup_tmux | default(false) %}
+# Start tmux for interactive local terminal sessions only
+if [[ -z "${TMUX:-}" && -z "${SSH_CONNECTION:-}" && -z "${SSH_CLIENT:-}" && -o interactive && -t 0 && -t 1 ]] && command -v tmux >/dev/null 2>&1; then
+    exec tmux
 fi
-
-# Load Rails environment variables if present
-if [ -f "${HOME}/.rails.env" ]; then
-    source "${HOME}/.rails.env"
-fi
-
-# Source fzf
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-{% set all_plugins = (ohmyzsh_default_plugins | default([]) + item.plugins | default([])) | map(attribute='name') | list %}
-{% if 'terraform' in all_plugins %}
-# Added with `terraform -install-autocomplete` command.
-# If terraform autocompletions do not work, remove these lines and reissue the command
-{% set binaries_rc = ohmyzsh_binaries.results | items2dict(key_name='item', value_name='rc') %}
-{% set binaries_stdout = ohmyzsh_binaries.results | items2dict(key_name='item', value_name='stdout') %}
-{% if binaries_rc.terraform | int > 0 %}
-#autoload -U +X bashcompinit && bashcompinit
-#complete -o nospace -C {{ binaries_stdout.terraform }} terraform
-{% else %}
-autoload -U +X bashcompinit && bashcompinit
-complete -o nospace -C {{ binaries_stdout.terraform }} terraform
 {% endif %}
-{% endif %}
-
-# Timezone variable passed to ssh sessions for systems in UTC
-# See ~/.ssh/conf.d for 'SendEnv TZ'
-# and 'AcceptEnv TZ' in SSHD (on UTC systems):
-export TZ="{{ control_host_tz }}"
